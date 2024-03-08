@@ -1,9 +1,7 @@
-﻿#include "Log.h"
+﻿#include "atpch.h"
+#include "Log.h"
 
-// TODO: temporary
-#include <iostream>
 #include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
 #include "ccprintf.h"
 
