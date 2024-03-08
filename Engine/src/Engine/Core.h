@@ -10,5 +10,4 @@
 */
 #else
 	#error The engine only supports Windows
-
 #endif
