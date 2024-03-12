@@ -13,6 +13,7 @@ namespace Engine {
 
 	// To be defined in client
 	Application* CreateApplication();
+
 }
 
 

@@ -1,3 +1,6 @@
 [submodule "Engine/vendor/yaml-cpp"]
 	path = Engine/vendor/yaml-cpp
 	url = https://github.com/TheRealFirst/yaml-cpp
+[submodule "Engine/vendor/glfw"]
+	path = Engine/vendor/glfw
+	url = https://github.com/TheRealFirst/glfw

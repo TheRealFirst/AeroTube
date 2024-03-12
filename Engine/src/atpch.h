@@ -13,7 +13,12 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Logging\Log.h"
+#include "Logging\asserts.h"
+
 #ifdef PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>

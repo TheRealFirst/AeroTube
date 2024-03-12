@@ -16,10 +16,15 @@ project "Engine"
 
 	includedirs{
 		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.glad}",
 	}
+	
 
 	links{
 		"yaml-cpp",
+		"GLFW",
+		"glad",
 	}
 
 	filter "system:windows"
