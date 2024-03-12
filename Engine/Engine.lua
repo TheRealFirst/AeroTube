@@ -15,7 +15,11 @@ project "Engine"
 	}
 
 	includedirs{
+		"%{IncludeDir.yaml_cpp}",
+	}
 
+	links{
+		"yaml-cpp",
 	}
 
 	filter "system:windows"
