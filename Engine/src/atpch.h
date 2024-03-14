@@ -19,6 +19,3 @@
 #ifdef PLATFORM_WINDOWS
 	#include <Windows.h>
 #endif
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>

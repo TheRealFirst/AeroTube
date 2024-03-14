@@ -2,10 +2,10 @@
 
 // For use by Applications
 
-#include "Engine\Application.h"
+#include "Core\Application.h"
 
 // ---- Entry Point -------------
-#include "Engine\EntryPoint.h"
+#include "Core\EntryPoint.h"
 // ---- Entry Point -------------
 
 // ---- Logging -----------------

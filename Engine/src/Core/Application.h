@@ -1,5 +1,7 @@
 #pragma once
 #include "Core.h"
+#include "../Rendering/window.h"
+
 
 namespace Engine {
 	class Application
@@ -9,11 +11,11 @@ namespace Engine {
 		virtual ~Application();
 
 		void Run();
+		Window* m_Window;
 	};
 
 	// To be defined in client
 	Application* CreateApplication();
-
 }
 
 
