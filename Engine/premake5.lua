@@ -1,26 +1,41 @@
-project "AeroTube"
-	kind "ConsoleApp"
+project "Engine"
+	kind "StaticLib"
 	language "C++"
 	cppdialect "C++17"
-	staticruntime "off"
+	staticruntime "on"
 
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
+	pchheader "atpch.h"
+	pchsource "src/atpch.cpp"
+
+	files {
 		"src/**.h",
-		"src/**.cpp"
+		"src/**.cpp",
+		"vendor/stb_image/**.h",
+		"vendor/stb_image/**.cpp",
 	}
 
-	includedirs
-	{
-		"%{wks.location}/Engine/src",
+	defines{
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLFW_INCLUDE_NONE",
+		"YAML_CPP_STATIC_DEFINE",
 	}
 
-	links
-	{
-		"Engine"
+	includedirs{
+		"src",
+		"%{IncludeDir.yaml_cpp}",
+		"%{IncludeDir.GLFW}",
+		"%{IncludeDir.glad}",
+		"%{IncludeDir.stb_image}",
+	}
+	
+
+	links{
+		"yaml-cpp",
+		"GLFW",
+		"glad",
 	}
 
 	filter "system:windows"
@@ -33,14 +48,14 @@ project "AeroTube"
 	filter "configurations:Debug"
 		defines "AT_DEBUG"
 		runtime "Debug"
-		symbols "on"
+		symbols "On"
 
 	filter "configurations:Release"
 		defines "AT_RELEASE"
 		runtime "Release"
-		optimize "on"
+		optimize "On"
 
 	filter "configurations:Dist"
 		defines "AT_DIST"
 		runtime "Release"
-		optimize "on"
+		optimize "On"

@@ -1,5 +1,5 @@
-project "Engine"
-	kind "StaticLib"
+project "AeroTube"
+	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++17"
 	staticruntime "on"
@@ -7,35 +7,24 @@ project "Engine"
 	targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "atpch.h"
-	pchsource "src/atpch.cpp"
-
-	files {
+	files
+	{
 		"src/**.h",
 		"src/**.cpp"
 	}
 
-	defines{
-		"GLFW_INCLUDE_NONE",
-		"YAML_CPP_STATIC_DEFINE",
+	includedirs
+	{
+		"%{wks.location}/Engine/src",
+		"%{wks.location}/Engine/vendor",
 	}
 
-	includedirs{
-		"src",
-		"%{IncludeDir.yaml_cpp}",
-		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.glad}",
-	}
-	
-
-	links{
-		"yaml-cpp",
-		"GLFW",
-		"glad",
+	links
+	{
+		"Engine"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
 		systemversion "latest"
 
 		defines{
@@ -44,12 +33,15 @@ project "Engine"
 
 	filter "configurations:Debug"
 		defines "AT_DEBUG"
-		symbols "On"
+		runtime "Debug"
+		symbols "on"
 
 	filter "configurations:Release"
 		defines "AT_RELEASE"
-		optimize "On"
+		runtime "Release"
+		optimize "on"
 
 	filter "configurations:Dist"
-		defines "AT_DEBUG"
-		optimize "On"
+		defines "AT_DIST"
+		runtime "Release"
+		optimize "on"
