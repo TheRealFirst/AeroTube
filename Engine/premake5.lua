@@ -15,6 +15,8 @@ project "Engine"
 		"src/**.cpp",
 		"vendor/stb_image/**.h",
 		"vendor/stb_image/**.cpp",
+		"vendor/glm/glm/**.hpp",
+		"vendor/glm/glm/**.inl",
 	}
 
 	defines{
@@ -29,6 +31,7 @@ project "Engine"
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.glad}",
 		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.glm}",
 	}
 	
 
@@ -36,6 +39,7 @@ project "Engine"
 		"yaml-cpp",
 		"GLFW",
 		"glad",
+		"opengl32.lib"
 	}
 
 	filter "system:windows"

@@ -5,9 +5,7 @@
 
 GLFWwindow* m_Window;
 
-Window::Window(uint32_t width, uint32_t height) {
-	m_Width = width;
-	m_Height = height;
+Window::Window(uint32_t width, uint32_t height) : m_Width(width), m_Height(height) {
 
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4.6);
@@ -26,7 +24,7 @@ Window::Window(uint32_t width, uint32_t height) {
 
 	glViewport(0, 0, m_Width, m_Height);
 
-	m_Renderer = new Renderer();
+	m_Renderer = new Renderer(m_Width, m_Height, m_Window);
 
 	aspectRatio = m_Width / m_Height;
 }
@@ -38,6 +36,8 @@ Window::~Window() {
 }
 void Window::Run() {
 	m_Renderer->Render();
+
+	
 
 	glfwSwapBuffers(m_Window);
 	glfwPollEvents();

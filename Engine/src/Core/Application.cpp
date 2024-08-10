@@ -7,7 +7,7 @@ namespace Engine {
 		initialize_logging();
 		LOG_INFO("Started up the Engine.");
 
-		m_Window = new Window(800, 800);
+		m_Window = new Window(1600, 1600);
 	}
 
 	Application::~Application()

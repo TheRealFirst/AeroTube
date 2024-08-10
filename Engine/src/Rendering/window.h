@@ -12,8 +12,8 @@ public:
 
 private:
 	//GLFWwindow* m_Window;
-	uint32_t m_Width = 800;
-	uint32_t m_Height = 800;
+	uint32_t m_Width;
+	uint32_t m_Height;
 	float aspectRatio;
 	Renderer* m_Renderer;
 };

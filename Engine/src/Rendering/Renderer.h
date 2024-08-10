@@ -4,24 +4,30 @@
 #include "Buffers\VAO.h"
 #include "Buffers\VBO.h"
 #include "Buffers\EBO.h"
-#include "../../vendor/stb_image/stb_image.h"
+#include "Texture.h"
+#include "glm\glm.hpp"
 
-
-typedef unsigned int GLuint;
+#include "Camera.h"
 
 class Renderer
 {
 public:
-	Renderer();
+	Renderer(uint32_t width, uint32_t height, GLFWwindow* window);
 	~Renderer();
 
 	void Render();
 
 private:
+	uint32_t m_Width;
+	uint32_t m_Height;
+	GLFWwindow* m_Window;
+
 	Shader shaderProgram;
 	VAO VAO1;
 	VBO VBO1;
 	EBO EBO1;
-	GLuint uniID;
+	Texture whiteSquare;
+
+	Camera m_Camera;
 };
 
