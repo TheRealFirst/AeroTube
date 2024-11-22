@@ -11,10 +11,16 @@ public:
 	bool isRunning();
 
 private:
+	void OnResize(int width, int height);
+private:
 	//GLFWwindow* m_Window;
 	uint32_t m_Width;
 	uint32_t m_Height;
 	float aspectRatio;
 	Renderer* m_Renderer;
+
+	float lastFrameTime;
+
+	int newFrameWidth, newFrameHeight;
 };
 

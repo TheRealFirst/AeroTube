@@ -15,8 +15,9 @@ public:
 	Renderer(uint32_t width, uint32_t height, GLFWwindow* window);
 	~Renderer();
 
-	void Render();
+	void Render(float deltaTime);
 
+	void Resize(uint32_t newWidth, uint32_t newHeight);
 private:
 	uint32_t m_Width;
 	uint32_t m_Height;
@@ -26,7 +27,14 @@ private:
 	VAO VAO1;
 	VBO VBO1;
 	EBO EBO1;
-	Texture whiteSquare;
+	Texture texture1;
+	Texture specular1;
+
+	Shader lightShader;
+	VAO lightVAO;
+	VBO lightVBO;
+	EBO lightEBO;
+	
 
 	Camera m_Camera;
 };

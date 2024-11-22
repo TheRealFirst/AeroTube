@@ -11,7 +11,7 @@ Camera::Camera(uint32_t width, uint32_t height, glm::vec3 position)
 	Position = position;
 }
 
-void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shader, const char* uniform)
+void Camera::updateMatrix(float FOVdeg, float nearPlane, float farPlane)
 {
 	glm::mat4 view = glm::mat4(1.0f);
 	glm::mat4 projection = glm::mat4(1.0f);
@@ -19,44 +19,17 @@ void Camera::Matrix(float FOVdeg, float nearPlane, float farPlane, Shader& shade
 	view = glm::lookAt(Position, Position + Orientation, Up);
 	projection = glm::perspective(glm::radians(FOVdeg), (float)m_Width / m_Height, nearPlane, farPlane);
 
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(projection * view));
+	cameraMatrix = projection * view;
 }
 
-void Camera::Inputs(GLFWwindow* window)
+void Camera::Matrix(Shader& shader, const char* uniform) 
 {
-	// Handles key inputs
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		Position += speed * Orientation;
-	}
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		Position += speed * -glm::normalize(glm::cross(Orientation, Up));
-	}
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		Position += speed * -Orientation;
-	}
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		Position += speed * glm::normalize(glm::cross(Orientation, Up));
-	}
-	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-	{
-		Position += speed * Up;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-	{
-		Position += speed * -Up;
-	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-	{
-		speed = 0.4f;
-	}
-	else if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_RELEASE)
-	{
-		speed = 0.1f;
-	}
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(cameraMatrix));
+}
+
+void Camera::Inputs(GLFWwindow* window, float deltaTime)
+{
+	float speed = m_Speed * deltaTime;
 
 	// Handles mouse inputs
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
@@ -69,6 +42,32 @@ void Camera::Inputs(GLFWwindow* window)
 		{
 			glfwSetCursorPos(window, (m_Width / 2), (m_Height / 2));
 			firstClick = false;
+		}
+
+		// Handles key inputs
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			Position += speed * Orientation;
+		}
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		{
+			Position += speed * -glm::normalize(glm::cross(Orientation, Up));
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			Position += speed * -Orientation;
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		{
+			Position += speed * glm::normalize(glm::cross(Orientation, Up));
+		}
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		{
+			Position += speed * Up;
+		}
+		if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+		{
+			Position += speed * -Up;
 		}
 
 		// Stores the coordinates of the cursor

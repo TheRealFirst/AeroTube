@@ -27,6 +27,8 @@ Window::Window(uint32_t width, uint32_t height) : m_Width(width), m_Height(heigh
 	m_Renderer = new Renderer(m_Width, m_Height, m_Window);
 
 	aspectRatio = m_Width / m_Height;
+
+	lastFrameTime = glfwGetTime();
 }
 
 Window::~Window() {
@@ -35,13 +37,33 @@ Window::~Window() {
 	glfwTerminate();
 }
 void Window::Run() {
-	m_Renderer->Render();
+	float delta = glfwGetTime() - lastFrameTime;
+	m_Renderer->Render(delta);
+
+	glfwGetFramebufferSize(m_Window, &newFrameWidth, &newFrameHeight);
+	if (newFrameWidth != m_Width || newFrameHeight != m_Height) {
+		OnResize(newFrameWidth, newFrameHeight);
+	}
 
 	
 
 	glfwSwapBuffers(m_Window);
 	glfwPollEvents();
+	lastFrameTime = glfwGetTime();
 }
+
+
 bool Window::isRunning() {
 	return !glfwWindowShouldClose(m_Window);
+}
+
+void Window::OnResize(int width, int height)
+{
+	LOG_DEBUG("Resized the window.");
+	m_Width = width;
+	m_Height = height;
+	aspectRatio = m_Width / m_Height;
+	glViewport(0, 0, m_Width, m_Height);
+
+	m_Renderer->Resize(m_Width, m_Height);
 }
