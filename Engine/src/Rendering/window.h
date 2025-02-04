@@ -22,5 +22,10 @@ private:
 	float lastFrameTime;
 
 	int newFrameWidth, newFrameHeight;
+
+	double prevTime = 0.0;
+	double crntTime = 0.0;
+	double timeDiff;
+	unsigned int counter = 0;
 };
 

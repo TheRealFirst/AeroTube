@@ -17,6 +17,7 @@ project "Engine"
 		"vendor/stb_image/**.cpp",
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
+		"vendor/json/json.h",
 	}
 
 	defines{
@@ -32,6 +33,7 @@ project "Engine"
 		"%{IncludeDir.glad}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.glm}",
+		"%{IncludeDir.json}",
 	}
 	
 

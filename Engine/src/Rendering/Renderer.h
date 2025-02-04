@@ -8,6 +8,8 @@
 #include "glm\glm.hpp"
 
 #include "Camera.h"
+#include "Model.h"
+#include "Skybox.h"
 
 class Renderer
 {
@@ -24,18 +26,12 @@ private:
 	GLFWwindow* m_Window;
 
 	Shader shaderProgram;
-	VAO VAO1;
-	VBO VBO1;
-	EBO EBO1;
-	Texture texture1;
-	Texture specular1;
+	Model model;
 
-	Shader lightShader;
-	VAO lightVAO;
-	VBO lightVBO;
-	EBO lightEBO;
-	
+	Skybox skybox;
 
 	Camera m_Camera;
+
+	Skybox_Textures skyboxTextures;
 };
 

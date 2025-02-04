@@ -5,6 +5,8 @@
 
 GLFWwindow* m_Window;
 
+
+
 Window::Window(uint32_t width, uint32_t height) : m_Width(width), m_Height(height) {
 
 	glfwInit();
