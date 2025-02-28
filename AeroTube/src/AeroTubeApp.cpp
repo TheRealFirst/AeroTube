@@ -3,7 +3,7 @@
 class AeroTube : public Engine::Application 
 {
 public:
-	AeroTube() {
+	AeroTube() : Application(){
 	}
 
 	~AeroTube() {

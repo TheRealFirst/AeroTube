@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include "Renderer.h"
 
+struct GLFWwindow;
+
 class Window
 {
 public:
@@ -10,10 +12,11 @@ public:
 	void Run();
 	bool isRunning();
 
+	void* GetWindow() const { return m_Window; }
 private:
 	void OnResize(int width, int height);
 private:
-	//GLFWwindow* m_Window;
+	GLFWwindow* m_Window;
 	uint32_t m_Width;
 	uint32_t m_Height;
 	float aspectRatio;

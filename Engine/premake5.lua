@@ -31,6 +31,7 @@ project "Engine"
 		"%{IncludeDir.yaml_cpp}",
 		"%{IncludeDir.GLFW}",
 		"%{IncludeDir.glad}",
+		"%{IncludeDir.ImGui}",
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.json}",
@@ -41,6 +42,7 @@ project "Engine"
 		"yaml-cpp",
 		"GLFW",
 		"glad",
+		"ImGui",
 		"opengl32.lib"
 	}
 

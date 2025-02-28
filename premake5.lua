@@ -22,6 +22,7 @@ IncludeDir["glad"] = "%{wks.location}/Engine/vendor/glad/include"
 IncludeDir["glm"] = "%{wks.location}/Engine/vendor/glm"
 IncludeDir["stb_image"] = "%{wks.location}/Engine/vendor/stb_image"
 IncludeDir["json"] = "%{wks.location}/Engine/vendor/json"
+IncludeDir["ImGui"] = "%{wks.location}/Engine/vendor/imgui"
 
 
 group "Dependencies"
@@ -29,6 +30,7 @@ group "Dependencies"
 	include "Engine/vendor/yaml-cpp"
 	include "Engine/vendor/GLFW"
 	include "Engine/vendor/glad"
+	include "Engine/vendor/imgui"
 group ""
 
 group "Core"

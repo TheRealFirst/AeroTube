@@ -1,11 +1,15 @@
 #include "atpch.h"
+
+
+
 #include "Renderer.h"
 #include "glad\glad.h"
 #include "stb_image.h"
 
 
+
 Renderer::Renderer(uint32_t width, uint32_t height, GLFWwindow* window) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height) , m_Window(window),
-m_Camera(m_Width, m_Height, glm::vec3(0.0f, 0.0f, 2.0f)), model("Assets/Models/bunny/scene.gltf"), skybox()
+m_Camera(m_Width, m_Height, glm::vec3(0.0f, 0.0f, 2.0f)), model("Assets/Models/bunny/scene.gltf") 
 {	
 	glm::vec4 lightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	glm::vec3 lightPos = glm::vec3(0.5f, 0.5f, 0.5f);
@@ -24,18 +28,23 @@ m_Camera(m_Width, m_Height, glm::vec3(0.0f, 0.0f, 2.0f)), model("Assets/Models/b
 	glFrontFace(GL_CCW);
 	*/
 
-	skyboxTextures.front = "Assets/Cubemaps/front.jpg";
-	skyboxTextures.back = "Assets/Cubemaps/back.jpg";
-	skyboxTextures.top = "Assets/Cubemaps/top.jpg";
-	skyboxTextures.bottom = "Assets/Cubemaps/bottom.jpg";
-	skyboxTextures.right = "Assets/Cubemaps/right.jpg";
-	skyboxTextures.left = "Assets/Cubemaps/left.jpg";
-	skybox.LoadSkybox(&skyboxTextures);
+	m_TestScene = new Scene();
+
+	// Make sure window is valid
+	if (!m_Window) {
+		LOG_FATAL("Failed creating the window");
+	}
+
+	// Initialize ImGui layer
+	m_ImGuiLayer = std::make_unique<ImGuiLayer>();
+	m_ImGuiLayer->InitializeImGui(m_Window);
 }
 
 Renderer::~Renderer()
 {
 	shaderProgram.Delete();
+	delete m_TestScene;
+	
 }
 
 void Renderer::Render(float deltaTime)
@@ -46,12 +55,18 @@ void Renderer::Render(float deltaTime)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	// Tell OpenGL which Shader Program we want to use
 
+	m_ImGuiLayer->ImGuiNewFrame();
+
 	m_Camera.Inputs(m_Window, deltaTime);
 	m_Camera.updateMatrix(45.0f, 0.1f, 100.0f);
+	
 
 	model.Draw(shaderProgram, m_Camera);
 
-	skybox.DrawSkybox(m_Camera.Position, m_Camera.Orientation, m_Camera.Up, m_Width, m_Height);
+	m_TestScene->DrawScene(m_Camera.Position, m_Camera.Orientation, m_Camera.Up, m_Width, m_Height);
+	
+	m_ImGuiLayer->ImGuiRender();
+
 
 }
 

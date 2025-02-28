@@ -9,7 +9,9 @@
 
 #include "Camera.h"
 #include "Model.h"
-#include "Skybox.h"
+#include "Scene\Scene.h"
+#include "ImGui/ImGuiLayer.h"
+
 
 class Renderer
 {
@@ -28,10 +30,10 @@ private:
 	Shader shaderProgram;
 	Model model;
 
-	Skybox skybox;
-
 	Camera m_Camera;
 
-	Skybox_Textures skyboxTextures;
+	Scene* m_TestScene;
+
+	std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
 };
 

@@ -2,12 +2,16 @@
 #include "Application.h"
 
 namespace Engine {
+	Application* Application::s_Instance = nullptr;
+
 	Application::Application()
 	{
 		initialize_logging();
 		LOG_INFO("Started up the Engine.");
 
-		m_Window = new Window(1600, 1600);
+		s_Instance = this;
+
+		m_Window = new Window(3840, 2160);
 	}
 
 	Application::~Application()
