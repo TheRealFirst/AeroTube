@@ -16,24 +16,23 @@
 class Renderer
 {
 public:
-	Renderer(uint32_t width, uint32_t height, GLFWwindow* window);
+	Renderer(uint32_t width, uint32_t height);
 	~Renderer();
 
-	void Render(float deltaTime);
+	void Clear(const glm::vec4& color);
 
-	void Resize(uint32_t newWidth, uint32_t newHeight);
+	void Render(float deltaTime, const Camera& camera);
+
+	
+
+	void OnWindowResize(uint32_t newWidth, uint32_t newHeight);
 private:
 	uint32_t m_Width;
 	uint32_t m_Height;
-	GLFWwindow* m_Window;
 
 	Shader shaderProgram;
 	Model model;
 
-	Camera m_Camera;
-
-	Scene* m_TestScene;
-
-	std::unique_ptr<ImGuiLayer> m_ImGuiLayer;
+	Scene* m_TestScene; // TODO: Move to Editorlayer
 };
 

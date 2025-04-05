@@ -58,7 +58,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 			bytes
 		);
 	else
-		ASSERT("Automatic Texture type recognition failed.")
+		AT_ASSERT("Automatic Texture type recognition failed.")
 
 
 	glGenerateMipmap(GL_TEXTURE_2D);

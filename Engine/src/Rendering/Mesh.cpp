@@ -29,7 +29,7 @@ Mesh::Mesh(std::vector <Vertex>& vertices, std::vector <GLuint>& indices, std::v
 void Mesh::Draw
 (
 	Shader& shader,
-	Camera& camera,
+	const Camera& camera,
 	glm::mat4 matrix,
 	glm::vec3 translation,
 	glm::quat rotation,
@@ -61,7 +61,7 @@ void Mesh::Draw
 	}
 	// Take care of the camera Matrix
 	glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
-	camera.Matrix(shader, "camMatrix");
+	// camera.Matrix(shader, "camMatrix");
 
 	// Initialize matrices
 	glm::mat4 trans = glm::mat4(1.0f);

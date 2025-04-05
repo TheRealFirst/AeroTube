@@ -12,7 +12,7 @@ class Model
 public:
 	Model(const char* file);
 
-	void Draw(Shader& shader, Camera& camera);
+	void Draw(Shader& shader, const Camera& camera);
 
 private:
 	const char* file;

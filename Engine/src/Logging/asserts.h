@@ -13,7 +13,7 @@
 
 void report_assertion_failure(const char* expression, const char* message, const char* file, int32_t line);
 
-#define ASSERT(expr)                                                   \
+#define AT_ASSERT(expr)                                                   \
     {                                                                   \
         if(expr){                                                       \
         }else{                                                          \

@@ -1,16 +1,28 @@
 #pragma once
 
+#include "../Core/Layer.h"
+#include "../Events/Event.h"
 
 struct GLFWwindow;
 
-class ImGuiLayer
-{
-public:
-	ImGuiLayer() = default;
-	~ImGuiLayer();
+namespace Engine {
+	class ImGuiLayer : public Layer
+	{
+	public:
+		ImGuiLayer();
+		~ImGuiLayer();
 
-	void InitializeImGui(GLFWwindow* window);
-	void ImGuiNewFrame();
-	void ImGuiRender();
-};
+		virtual void OnAttach() override;
+		virtual void OnDetach() override;
+		virtual void OnEvent(Event& e) override;
 
+		void Begin();
+		void End();
+
+		void BlockEvents(bool block) { m_BlockEvents = block; }
+		void SetDarkThemeColors();
+	private:
+		bool m_BlockEvents = true;
+		float m_Time = 0.0f;
+	};
+}
