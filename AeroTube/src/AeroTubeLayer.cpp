@@ -1,6 +1,7 @@
 #include "AeroTubeLayer.h"
 
 #include <imgui/imgui.h>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace Engine {
 	AeroTubeLayer::AeroTubeLayer() : Layer("AeroTube")
@@ -141,12 +142,126 @@ namespace Engine {
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Models"))
+			{
+				if (ImGui::MenuItem("Bunny"))
+				{
+					m_Renderer->LoadModel("Assets/Models/bunny/scene.gltf");
+
+					// Apply specific transformations for the bunny model
+					m_Renderer->SetModelPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+					m_Renderer->SetModelRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+					m_Renderer->SetModelScale(glm::vec3(1.0f));
+				}
+				if (ImGui::MenuItem("Adam Head"))
+				{
+					m_Renderer->LoadModel("Assets/Models/adamHead/adamHead.gltf");
+
+					// Apply specific transformations for the adamHead model
+					m_Renderer->SetModelPosition(glm::vec3(0.0f, -0.5f, 0.0f));
+					m_Renderer->SetModelRotation(glm::vec3(0.0f, 180.0f, 0.0f));
+					m_Renderer->SetModelScale(glm::vec3(0.5f));
+
+					// Set optimal lighting for Adam Head
+					m_Renderer->SetLightPosition(glm::vec3(0.0f, 1.0f, 2.0f));
+					m_Renderer->SetLightColor(glm::vec4(1.8f, 1.8f, 1.8f, 1.0f));
+				}
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
 
 		ImGui::Begin("Stats");
 
 		ImGui::Text("No Stats available yet");
+
+		ImGui::End();
+
+		// Model Settings Panel
+		ImGui::Begin("Model Settings");
+
+		// Get current model transformations
+		glm::vec3 modelPosition = m_Renderer->GetModelPosition();
+		glm::vec3 modelRotation = m_Renderer->GetModelRotation();
+		glm::vec3 modelScale = m_Renderer->GetModelScale();
+
+		// Get current light properties
+		glm::vec3 lightPosition = m_Renderer->GetLightPosition();
+		glm::vec4 lightColor = m_Renderer->GetLightColor();
+
+		// Position controls
+		ImGui::Text("Position");
+		if (ImGui::DragFloat3("##Position", glm::value_ptr(modelPosition), 0.1f))
+		{
+			m_Renderer->SetModelPosition(modelPosition);
+		}
+
+		// Rotation controls
+		ImGui::Text("Rotation");
+		if (ImGui::DragFloat3("##Rotation", glm::value_ptr(modelRotation), 1.0f))
+		{
+			m_Renderer->SetModelRotation(modelRotation);
+		}
+
+		// Scale controls
+		ImGui::Text("Scale");
+		if (ImGui::DragFloat3("##Scale", glm::value_ptr(modelScale), 0.1f, 0.1f, 10.0f))
+		{
+			m_Renderer->SetModelScale(modelScale);
+		}
+
+		ImGui::Separator();
+		ImGui::Text("Light Settings");
+
+		// Light position controls
+		ImGui::Text("Light Position");
+		if (ImGui::DragFloat3("##LightPosition", glm::value_ptr(lightPosition), 0.1f))
+		{
+			m_Renderer->SetLightPosition(lightPosition);
+		}
+
+		// Light color controls
+		ImGui::Text("Light Color");
+		if (ImGui::ColorEdit3("##LightColor", glm::value_ptr(lightColor)))
+		{
+			m_Renderer->SetLightColor(lightColor);
+		}
+
+		// Presets
+		ImGui::Text("Presets");
+
+		// Reset button
+		if (ImGui::Button("Reset"))
+		{
+			m_Renderer->SetModelPosition(glm::vec3(0.0f));
+			m_Renderer->SetModelRotation(glm::vec3(0.0f));
+			m_Renderer->SetModelScale(glm::vec3(1.0f));
+		}
+
+		ImGui::SameLine();
+
+		// Bunny preset
+		if (ImGui::Button("Bunny"))
+		{
+			m_Renderer->SetModelPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+			m_Renderer->SetModelRotation(glm::vec3(0.0f, 0.0f, 0.0f));
+			m_Renderer->SetModelScale(glm::vec3(1.0f));
+		}
+
+		ImGui::SameLine();
+
+		// Adam Head preset
+		if (ImGui::Button("Adam Head"))
+		{
+			m_Renderer->SetModelPosition(glm::vec3(0.0f, -0.5f, 0.0f));
+			m_Renderer->SetModelRotation(glm::vec3(0.0f, 180.0f, 0.0f));
+			m_Renderer->SetModelScale(glm::vec3(0.5f));
+
+			// Set optimal lighting for Adam Head
+			m_Renderer->SetLightPosition(glm::vec3(0.0f, 1.0f, 2.0f));
+			m_Renderer->SetLightColor(glm::vec4(1.8f, 1.8f, 1.8f, 1.0f));
+		}
 
 		ImGui::End();
 
@@ -187,7 +302,53 @@ namespace Engine {
 
 	bool AeroTubeLayer::OnKeyPressed(KeyPressedEvent& e)
 	{
-		return false;
+		if (e.GetRepeatCount() > 0)
+			return false;
+
+		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (control)
+					// NewScene();
+
+				break;
+			}
+			case Key::O:
+			{
+				if (control)
+					// OpenScene();
+
+				break;
+			}
+			case Key::S:
+			{
+				if (control && shift)
+					// SaveSceneAs();
+
+				break;
+			}
+			case Key::W:
+			{
+				if (control)
+				{
+					CloseApplication();
+				}
+				break;
+			}
+			/*
+			case Key::Comma:
+			{
+				if (control)
+				{
+					ShowSettings();
+				}
+				break;
+			}
+			*/
+		}
 	}
 
 	bool AeroTubeLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)

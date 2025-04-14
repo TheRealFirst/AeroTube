@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <unordered_map>
 #include "Mesh.h"
 
 #include "../../Engine/vendor/json/json.h"
@@ -10,7 +10,14 @@ using json = nlohmann::json;
 class Model
 {
 public:
+	Model() = default; // Default constructor
 	Model(const char* file);
+
+	// Static method to load a model with caching
+	static Model* LoadModel(const char* file);
+
+	// Clear the model cache
+	static void ClearModelCache();
 
 	void Draw(Shader& shader, const Camera& camera);
 
@@ -24,7 +31,7 @@ private:
 	std::vector<glm::quat> rotationsMeshes;
 	std::vector<glm::vec3> scalesMeshes;
 	std::vector<glm::mat4> matricesMeshes;
-	
+
 
 	std::vector<std::string> loadedTexName;
 	std::vector<Texture> loadedTex;
@@ -49,6 +56,9 @@ private:
 	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floatVec);
 	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floatVec);
 	std::vector<glm::vec4> groupFloatsVec4(std::vector<float> floatVec);
+
+	// Static model cache
+	static std::unordered_map<std::string, Model*> s_ModelCache;
 };
 
 

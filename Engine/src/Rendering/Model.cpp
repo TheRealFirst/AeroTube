@@ -1,6 +1,9 @@
 #include "atpch.h"
 #include"Model.h"
 
+// Initialize static model cache
+std::unordered_map<std::string, Model*> Model::s_ModelCache;
+
 Model::Model(const char* file)
 {
 	// Make a JSON object
@@ -15,6 +18,42 @@ Model::Model(const char* file)
 	traverseNode(0);
 }
 
+Model* Model::LoadModel(const char* file)
+{
+	// Check if the model is already in the cache
+	std::string filePath(file);
+	auto it = s_ModelCache.find(filePath);
+
+	if (it != s_ModelCache.end())
+	{
+		// Model found in cache, return it
+		LOG_INFO("Model loaded from cache: {0}", filePath);
+		return it->second;
+	}
+
+	// Model not in cache, load it
+	LOG_INFO("Loading model: {0}", filePath);
+	Model* model = new Model(file);
+
+	// Add to cache
+	s_ModelCache[filePath] = model;
+
+	return model;
+}
+
+void Model::ClearModelCache()
+{
+	// Delete all models in the cache
+	for (auto& pair : s_ModelCache)
+	{
+		delete pair.second;
+	}
+
+	// Clear the cache
+	s_ModelCache.clear();
+	LOG_INFO("Model cache cleared");
+}
+
 void Model::Draw(Shader& shader, const Camera& camera)
 {
 	// Go over all meshes and draw each one
@@ -26,27 +65,103 @@ void Model::Draw(Shader& shader, const Camera& camera)
 
 void Model::loadMesh(unsigned int indMesh)
 {
-	// Get all accessor indices
-	unsigned int posAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
-	unsigned int normalAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
-	unsigned int texAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"];
-	unsigned int indAccInd = JSON["meshes"][indMesh]["primitives"][0]["indices"];
+	try
+	{
+		// Check if the mesh index is valid
+		if (indMesh >= JSON["meshes"].size())
+		{
+			LOG_ERROR("Invalid mesh index: {0}", indMesh);
+			return;
+		}
 
-	// Use accessor indices to get all vertices components
-	std::vector<float> posVec = getFloats(JSON["accessors"][posAccInd]);
-	std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
-	std::vector<float> normalVec = getFloats(JSON["accessors"][normalAccInd]);
-	std::vector<glm::vec3> normals = groupFloatsVec3(normalVec);
-	std::vector<float> texVec = getFloats(JSON["accessors"][texAccInd]);
-	std::vector<glm::vec2> texUVs = groupFloatsVec2(texVec);
+		// Check if the mesh has primitives
+		if (!JSON["meshes"][indMesh].contains("primitives") || JSON["meshes"][indMesh]["primitives"].size() == 0)
+		{
+			LOG_ERROR("Mesh {0} has no primitives", indMesh);
+			return;
+		}
 
-	// Combine all the vertex components and also get the indices and textures
-	std::vector<Vertex> vertices = assembleVertices(positions, normals, texUVs);
-	std::vector<GLuint> indices = getIndices(JSON["accessors"][indAccInd]);
-	std::vector<Texture> textures = getTextures();
+		// Check if the primitive has attributes
+		if (!JSON["meshes"][indMesh]["primitives"][0].contains("attributes"))
+		{
+			LOG_ERROR("Mesh {0} primitive 0 has no attributes", indMesh);
+			return;
+		}
 
-	// Combine the vertices, indices, and textures into a mesh
-	meshes.push_back(Mesh(vertices, indices, textures));
+		// Get all accessor indices with error checking
+		if (!JSON["meshes"][indMesh]["primitives"][0]["attributes"].contains("POSITION"))
+		{
+			LOG_ERROR("Mesh {0} primitive 0 has no POSITION attribute", indMesh);
+			return;
+		}
+		unsigned int posAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["POSITION"];
+
+		// Check if the normal attribute exists
+		unsigned int normalAccInd = 0;
+		bool hasNormals = JSON["meshes"][indMesh]["primitives"][0]["attributes"].contains("NORMAL");
+		if (hasNormals)
+		{
+			normalAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["NORMAL"];
+		}
+
+		// Check if the texture coordinate attribute exists
+		unsigned int texAccInd = 0;
+		bool hasTexCoords = JSON["meshes"][indMesh]["primitives"][0]["attributes"].contains("TEXCOORD_0");
+		if (hasTexCoords)
+		{
+			texAccInd = JSON["meshes"][indMesh]["primitives"][0]["attributes"]["TEXCOORD_0"];
+		}
+
+		// Check if the indices attribute exists
+		if (!JSON["meshes"][indMesh]["primitives"][0].contains("indices"))
+		{
+			LOG_ERROR("Mesh {0} primitive 0 has no indices", indMesh);
+			return;
+		}
+		unsigned int indAccInd = JSON["meshes"][indMesh]["primitives"][0]["indices"];
+
+		// Use accessor indices to get all vertices components
+		std::vector<float> posVec = getFloats(JSON["accessors"][posAccInd]);
+		std::vector<glm::vec3> positions = groupFloatsVec3(posVec);
+
+		// Get normals if they exist
+		std::vector<glm::vec3> normals;
+		if (hasNormals)
+		{
+			std::vector<float> normalVec = getFloats(JSON["accessors"][normalAccInd]);
+			normals = groupFloatsVec3(normalVec);
+		}
+		else
+		{
+			// If normals don't exist, create default normals
+			normals = std::vector<glm::vec3>(positions.size(), glm::vec3(0.0f, 1.0f, 0.0f));
+		}
+
+		// Get texture coordinates if they exist
+		std::vector<glm::vec2> texUVs;
+		if (hasTexCoords)
+		{
+			std::vector<float> texVec = getFloats(JSON["accessors"][texAccInd]);
+			texUVs = groupFloatsVec2(texVec);
+		}
+		else
+		{
+			// If texture coordinates don't exist, create default UVs
+			texUVs = std::vector<glm::vec2>(positions.size(), glm::vec2(0.0f, 0.0f));
+		}
+
+		// Combine all the vertex components and also get the indices and textures
+		std::vector<Vertex> vertices = assembleVertices(positions, normals, texUVs);
+		std::vector<GLuint> indices = getIndices(JSON["accessors"][indAccInd]);
+		std::vector<Texture> textures = getTextures();
+
+		// Combine the vertices, indices, and textures into a mesh
+		meshes.push_back(Mesh(vertices, indices, textures));
+	}
+	catch (const std::exception& e)
+	{
+		LOG_ERROR("Error loading mesh {0}: {1}", indMesh, e.what());
+	}
 }
 
 void Model::traverseNode(unsigned int nextNode, glm::mat4 matrix)
@@ -145,17 +260,44 @@ std::vector<unsigned char> Model::getData()
 
 std::vector<float> Model::getFloats(json accessor)
 {
-	std::vector<float> floatVec;
-
 	// Get properties from the accessor
-	unsigned int buffViewInd = accessor.value("bufferView", 1);
+	// Check if bufferView exists in the accessor
+	if (!accessor.contains("bufferView"))
+	{
+		// If bufferView is not present, return an empty vector
+		LOG_WARN("Accessor does not contain bufferView");
+		return std::vector<float>();
+	}
+
+	unsigned int buffViewInd = accessor["bufferView"];
 	unsigned int count = accessor["count"];
 	unsigned int accByteOffset = accessor.value("byteOffset", 0);
 	std::string type = accessor["type"];
 
 	// Get properties from the bufferView
+	// Check if the bufferView index is valid
+	if (buffViewInd >= JSON["bufferViews"].size())
+	{
+		LOG_ERROR("Invalid bufferView index: {0}", buffViewInd);
+		return std::vector<float>();
+	}
+
 	json bufferView = JSON["bufferViews"][buffViewInd];
 	unsigned int byteOffset = bufferView["byteOffset"];
+
+	// Pre-allocate the vector to avoid reallocations
+	std::vector<float> floatVec;
+	// Calculate the expected size based on the type
+	unsigned int numComponents = 1;
+	if (type == "SCALAR") numComponents = 1;
+	else if (type == "VEC2") numComponents = 2;
+	else if (type == "VEC3") numComponents = 3;
+	else if (type == "VEC4") numComponents = 4;
+	else if (type == "MAT3") numComponents = 9;
+	else if (type == "MAT4") numComponents = 16;
+
+	// Reserve space for all elements
+	floatVec.reserve(count * numComponents);
 
 	// Interpret the type and store it into numPerVert
 	unsigned int numPerVert;
@@ -181,17 +323,34 @@ std::vector<float> Model::getFloats(json accessor)
 
 std::vector<GLuint> Model::getIndices(json accessor)
 {
-	std::vector<GLuint> indices;
-
 	// Get properties from the accessor
-	unsigned int buffViewInd = accessor.value("bufferView", 0);
+	// Check if bufferView exists in the accessor
+	if (!accessor.contains("bufferView"))
+	{
+		// If bufferView is not present, return an empty vector
+		LOG_WARN("Accessor does not contain bufferView");
+		return std::vector<GLuint>();
+	}
+
+	unsigned int buffViewInd = accessor["bufferView"];
 	unsigned int count = accessor["count"];
 	unsigned int accByteOffset = accessor.value("byteOffset", 0);
 	unsigned int componentType = accessor["componentType"];
 
 	// Get properties from the bufferView
+	// Check if the bufferView index is valid
+	if (buffViewInd >= JSON["bufferViews"].size())
+	{
+		LOG_ERROR("Invalid bufferView index: {0}", buffViewInd);
+		return std::vector<GLuint>();
+	}
+
 	json bufferView = JSON["bufferViews"][buffViewInd];
 	unsigned int byteOffset = bufferView["byteOffset"];
+
+	// Pre-allocate the vector to avoid reallocations
+	std::vector<GLuint> indices;
+	indices.reserve(count);
 
 	// Get indices with regards to their type: unsigned int, unsigned short, or short
 	unsigned int beginningOfData = byteOffset + accByteOffset;
@@ -257,20 +416,95 @@ std::vector<Texture> Model::getTextures()
 		// If the texture has been loaded, skip this
 		if (!skip)
 		{
-			// Load diffuse texture
-			if (texPath.find("baseColor") != std::string::npos)
+			// Log the texture path for debugging
+			LOG_INFO("Processing texture: {0}", texPath);
+
+			// Create the full path to the texture
+			std::string fullPath = fileDirectory + texPath;
+
+			// Check if the file exists
+			FILE* file = fopen(fullPath.c_str(), "r");
+			if (!file)
 			{
-				Texture diffuse = Texture((fileDirectory + texPath).c_str(), "diffuse", loadedTex.size());
+				// File doesn't exist, log an error
+				LOG_ERROR("Texture file not found: {0}", fullPath);
+
+				// Try to find the texture in a different location
+				// For adamHead model, the textures are in a different location
+				size_t lastSlash = texPath.find_last_of("/\\");
+				if (lastSlash != std::string::npos)
+				{
+					std::string textureName = texPath.substr(lastSlash + 1);
+					std::string alternativePath = fileDirectory + textureName;
+
+					LOG_INFO("Trying alternative path: {0}", alternativePath);
+
+					file = fopen(alternativePath.c_str(), "r");
+					if (file)
+					{
+						fclose(file);
+						fullPath = alternativePath;
+					}
+					else
+					{
+						LOG_ERROR("Alternative texture file not found: {0}", alternativePath);
+						return textures; // Skip this texture
+					}
+				}
+				else
+				{
+					return textures; // Skip this texture
+				}
+			}
+			else
+			{
+				fclose(file);
+			}
+
+			// Determine the texture type based on the filename
+			if (texPath.find("baseColor") != std::string::npos || texPath.find("_a.") != std::string::npos)
+			{
+				// Load diffuse texture
+				LOG_INFO("Loading diffuse texture: {0}", fullPath);
+				Texture diffuse = Texture::LoadTexture(fullPath.c_str(), "diffuse", loadedTex.size());
 				textures.push_back(diffuse);
 				loadedTex.push_back(diffuse);
 				loadedTexName.push_back(texPath);
 			}
-			// Load specular texture
-			else if (texPath.find("metallicRoughness") != std::string::npos)
+			else if (texPath.find("metallicRoughness") != std::string::npos || texPath.find("_sg.") != std::string::npos)
 			{
-				Texture specular = Texture((fileDirectory + texPath).c_str(), "specular", loadedTex.size());
+				// Load specular texture
+				LOG_INFO("Loading specular texture: {0}", fullPath);
+				Texture specular = Texture::LoadTexture(fullPath.c_str(), "specular", loadedTex.size());
 				textures.push_back(specular);
 				loadedTex.push_back(specular);
+				loadedTexName.push_back(texPath);
+			}
+			else if (texPath.find("_n.") != std::string::npos)
+			{
+				// Load normal map
+				LOG_INFO("Loading normal map: {0}", fullPath);
+				Texture normal = Texture::LoadTexture(fullPath.c_str(), "normal", loadedTex.size());
+				textures.push_back(normal);
+				loadedTex.push_back(normal);
+				loadedTexName.push_back(texPath);
+			}
+			else if (texPath.find("_o.") != std::string::npos)
+			{
+				// Load occlusion map
+				LOG_INFO("Loading occlusion map: {0}", fullPath);
+				Texture occlusion = Texture::LoadTexture(fullPath.c_str(), "specular", loadedTex.size());
+				textures.push_back(occlusion);
+				loadedTex.push_back(occlusion);
+				loadedTexName.push_back(texPath);
+			}
+			else
+			{
+				// Unknown texture type, load as diffuse
+				LOG_INFO("Loading unknown texture type as diffuse: {0}", fullPath);
+				Texture diffuse = Texture::LoadTexture(fullPath.c_str(), "diffuse", loadedTex.size());
+				textures.push_back(diffuse);
+				loadedTex.push_back(diffuse);
 				loadedTexName.push_back(texPath);
 			}
 		}
@@ -286,7 +520,10 @@ std::vector<Vertex> Model::assembleVertices
 	std::vector<glm::vec2> texUVs
 )
 {
+	// Pre-allocate the vertices vector to avoid reallocations
 	std::vector<Vertex> vertices;
+	vertices.reserve(positions.size());
+
 	for (int i = 0; i < positions.size(); i++)
 	{
 		vertices.push_back
@@ -307,7 +544,10 @@ std::vector<glm::vec2> Model::groupFloatsVec2(std::vector<float> floatVec)
 {
 	const unsigned int floatsPerVector = 2;
 
+	// Pre-allocate the vectors to avoid reallocations
 	std::vector<glm::vec2> vectors;
+	vectors.reserve(floatVec.size() / floatsPerVector);
+
 	for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
 	{
 		vectors.push_back(glm::vec2(0, 0));
@@ -323,7 +563,10 @@ std::vector<glm::vec3> Model::groupFloatsVec3(std::vector<float> floatVec)
 {
 	const unsigned int floatsPerVector = 3;
 
+	// Pre-allocate the vectors to avoid reallocations
 	std::vector<glm::vec3> vectors;
+	vectors.reserve(floatVec.size() / floatsPerVector);
+
 	for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
 	{
 		vectors.push_back(glm::vec3(0, 0, 0));
@@ -339,7 +582,10 @@ std::vector<glm::vec4> Model::groupFloatsVec4(std::vector<float> floatVec)
 {
 	const unsigned int floatsPerVector = 4;
 
+	// Pre-allocate the vectors to avoid reallocations
 	std::vector<glm::vec4> vectors;
+	vectors.reserve(floatVec.size() / floatsPerVector);
+
 	for (unsigned int i = 0; i < floatVec.size(); i += floatsPerVector)
 	{
 		vectors.push_back(glm::vec4(0, 0, 0, 0));
