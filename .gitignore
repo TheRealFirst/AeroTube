@@ -1,6 +1,8 @@
 # Directories
-bin/
+**/bin/
+!vendor/premake/bin/
 bin-int/
+Intermediates/
 
 # Visual Studio files and folder
 .vs/
