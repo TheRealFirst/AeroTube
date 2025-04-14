@@ -35,6 +35,7 @@ project "Engine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.json}",
+		"%{IncludeDir.assimp}",
 	}
 	
 
@@ -43,7 +44,8 @@ project "Engine"
 		"GLFW",
 		"glad",
 		"ImGui",
-		"opengl32.lib"
+		"opengl32.lib",
+		"assimp",
 	}
 
 	filter "system:windows"
