@@ -23,7 +23,7 @@ IncludeDir["glm"] = "%{wks.location}/Engine/vendor/glm"
 IncludeDir["stb_image"] = "%{wks.location}/Engine/vendor/stb_image"
 IncludeDir["json"] = "%{wks.location}/Engine/vendor/json"
 IncludeDir["ImGui"] = "%{wks.location}/Engine/vendor/imgui"
-IncludeDir["assimp"] = "%{wks.location}/Engine/vendor/assimp/include/assimp"
+IncludeDir["assimp"] = "%{wks.location}/Engine/vendor/assimp/include/"
 
 
 group "Dependencies"

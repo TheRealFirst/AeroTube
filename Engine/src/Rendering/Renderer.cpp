@@ -8,11 +8,8 @@
 
 #include "imgui.h"
 
-Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height)
+Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height), model("assets/models/bunny/scene.gltf")
 {
-	// Initialize the model with the default bunny model using the model cache
-	model = Model::LoadModel("Assets/Models/bunny/scene.gltf");
-
 	// Use the member variables for light properties
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, m_LightPosition);
@@ -37,7 +34,6 @@ Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shad
 Renderer::~Renderer()
 {
 	shaderProgram.Delete();
-	delete model;
 	delete m_TestScene;
 }
 
@@ -75,7 +71,7 @@ void Renderer::Render(float deltaTime, const Camera& camera)
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
 	camera.Matrix(shaderProgram, "camMatrix");
-	model->Draw(shaderProgram, camera);
+	model.Draw(shaderProgram);
 
 	m_TestScene->DrawScene(camera.Position, camera.Orientation, camera.Up, m_Width, m_Height);
 }
@@ -108,7 +104,7 @@ void Renderer::LoadModel(const std::string& modelPath)
 {
 	// No need to delete the old model since it's cached
 	// Just load the new model from cache or create it if not cached
-	model = Model::LoadModel(modelPath.c_str());
+	// model = Model(modelPath);
 
 	// Log the model loading
 	LOG_INFO("Switched to model: {0}", modelPath);

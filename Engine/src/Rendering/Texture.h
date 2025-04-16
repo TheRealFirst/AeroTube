@@ -13,12 +13,15 @@ public:
 	GLuint ID;
 	const char* type;
 	GLuint unit;
+	const char* path;
 
 	Texture() = default;
 	Texture(const char* image, const char* texType, GLuint slot);
 
 	// Static method to load a texture with caching
 	static Texture LoadTexture(const char* image, const char* texType, GLuint slot);
+
+	unsigned int TextureFromFile(const char* path, const std::string& directory);
 
 	// Clear the texture cache
 	static void ClearTextureCache();

@@ -3,62 +3,32 @@
 #include <unordered_map>
 #include "Mesh.h"
 
-#include "../../Engine/vendor/json/json.h"
+#include "Texture.h"
 
-using json = nlohmann::json;
+#include <assimp/scene.h>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
 
 class Model
 {
 public:
-	Model() = default; // Default constructor
-	Model(const char* file);
-
-	// Static method to load a model with caching
-	static Model* LoadModel(const char* file);
-
-	// Clear the model cache
-	static void ClearModelCache();
-
-	void Draw(Shader& shader, const Camera& camera);
-
+    Model(const char* path)
+    {
+        loadModel(path);
+    }
+    void Draw(Shader& shader);
 private:
-	const char* file;
-	std::vector<unsigned char> data;
-	json JSON;
+    // model data
+    std::vector<Mesh> meshes;
+    std::string directory;
 
-	std::vector<Mesh> meshes;
-	std::vector<glm::vec3> translationsMeshes;
-	std::vector<glm::quat> rotationsMeshes;
-	std::vector<glm::vec3> scalesMeshes;
-	std::vector<glm::mat4> matricesMeshes;
+    std::vector<Texture> loaded_textures;
 
-
-	std::vector<std::string> loadedTexName;
-	std::vector<Texture> loadedTex;
-
-	void loadMesh(unsigned int indMesh);
-
-	void traverseNode(unsigned int nextNode, glm::mat4 matrix = glm::mat4(1.0f));
-
-	std::vector<unsigned char> getData();
-	std::vector<float> getFloats(json accessor);
-	std::vector<GLuint> getIndices(json accessor);
-	std::vector<Texture> getTextures();
-
-
-	std::vector<Vertex> assembleVertices
-	(
-		std::vector<glm::vec3> positions,
-		std::vector<glm::vec3> normals,
-		std::vector<glm::vec2> textureUVs
-	);
-
-	std::vector<glm::vec2> groupFloatsVec2(std::vector<float> floatVec);
-	std::vector<glm::vec3> groupFloatsVec3(std::vector<float> floatVec);
-	std::vector<glm::vec4> groupFloatsVec4(std::vector<float> floatVec);
-
-	// Static model cache
-	static std::unordered_map<std::string, Model*> s_ModelCache;
+    void loadModel(std::string path);
+    void processNode(aiNode* node, const aiScene* scene);
+    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+    std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type,
+        std::string typeName);
 };
 
 

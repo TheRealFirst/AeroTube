@@ -18,6 +18,7 @@ project "AeroTube"
 		"%{wks.location}/Engine/src",
 		"%{wks.location}/Engine/vendor",
 		"%{IncludeDir.glm}",
+		"%{IncludeDir.assimp}"
 	}
 
 	links

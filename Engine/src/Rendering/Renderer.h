@@ -48,7 +48,7 @@ private:
 	uint32_t m_Height;
 
 	Shader shaderProgram;
-	Model* model;
+	Model model;
 
 	// Model transformation properties
 	glm::vec3 m_ModelPosition = glm::vec3(0.0f);

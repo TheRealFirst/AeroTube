@@ -38,6 +38,9 @@ project "Engine"
 		"%{IncludeDir.assimp}",
 	}
 	
+	libdirs {
+        "%{prj.location}/vendor/assimp/bin/" .. outputdir .. "/assimp"
+    }
 
 	links{
 		"yaml-cpp",
@@ -45,7 +48,7 @@ project "Engine"
 		"glad",
 		"ImGui",
 		"opengl32.lib",
-		"assimp",
+		"assimp.lib",
 	}
 
 	filter "system:windows"
