@@ -61,7 +61,7 @@ void Model::loadModel(std::string path)
 		return;
 	}
 
-	directory = path.substr(0, path.find_last_of("/\\"));
+	directory = path.substr(0, path.find_last_of("/"));
 	LOG_INFO("Loading model from path: %s", path.c_str());
 	LOG_INFO("Model directory: %s", directory.c_str());
 	LOG_INFO("Number of materials: %d", scene->mNumMaterials);
@@ -132,21 +132,11 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 	}
 
 	// Process indices - Make sure we're only processing triangles
-	indices.reserve(mesh->mNumFaces * 3); // Pre-allocate space for efficiency
 	for (unsigned int i = 0; i < mesh->mNumFaces; i++)
 	{
 		aiFace face = mesh->mFaces[i];
-		if (face.mNumIndices != 3) {
-			LOG_WARN("Skipping non-triangular face (indices: %d)", face.mNumIndices);
-			continue;
-		}
 		
-		for (unsigned int j = 0; j < 3; j++) {
-			if (face.mIndices[j] >= mesh->mNumVertices) {
-				LOG_ERROR("Invalid index detected: %u (max vertices: %u)", 
-					face.mIndices[j], mesh->mNumVertices);
-				continue;
-			}
+		for (unsigned int j = 0; j < face.mNumIndices; j++) {
 			indices.push_back(face.mIndices[j]);
 		}
 	}
