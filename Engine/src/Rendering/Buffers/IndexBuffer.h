@@ -6,12 +6,12 @@ typedef unsigned int GLuint;
 
 #include "vector"
 
-class EBO
+class IndexBuffer
 {
 public:
-	GLuint ID;
-	EBO() = default;
-	EBO(std::vector<GLuint>& indices);
+	GLuint ID = 0;
+	IndexBuffer() = default;
+	IndexBuffer(std::vector<GLuint>& indices);
 
 	void Bind();
 	void Unbind();

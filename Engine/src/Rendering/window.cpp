@@ -19,6 +19,20 @@ namespace Engine {
 		LOG_ERROR(description);
 	}
 
+    void GLAPIENTRY
+        GLMessageCallback(GLenum source,
+            GLenum type,
+            GLuint id,
+            GLenum severity,
+            GLsizei length,
+            const GLchar* message,
+            const void* userParam)
+    {
+        fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+            type, severity, message);
+    }
+
 	Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	{
 		m_Data.Title = title;
@@ -52,6 +66,10 @@ namespace Engine {
 
         // Initialize GLAD after creating OpenGL context
         AT_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to initialize Glad!");
+
+        // During init, enable debug output
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(GLMessageCallback, 0);
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);

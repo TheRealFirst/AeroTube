@@ -26,7 +26,8 @@ public:
 
 	void UpdateView();
 	void UpdateProjection();
-	void Matrix(Shader& shader, const char* uniform) const;
+	void MatrixUniform(Shader& shader, const char* uniform) const;
+	void PositionUniform(Shader& shader, const char* uniform) const;
 	void Inputs(Engine::Timestep ts);
 
 	void Resize(uint32_t newWidth, uint32_t newHeight) { m_Width = newWidth; m_Height = newHeight; UpdateProjection(); }

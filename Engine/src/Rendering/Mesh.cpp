@@ -1,63 +1,87 @@
 #include "atpch.h"
 #include "Mesh.h"
-
-#include "glad\glad.h"
+#include "glad/glad.h"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
 {
-	this->vertices = vertices;
-	this->indices = indices;
-	this->textures = textures;
+	LOG_DEBUG("Creating mesh with %d vertices, %d indices, %d textures", 
+		vertices.size(), indices.size(), textures.size());
+	
+	Mesh::vertices = vertices;
+	Mesh::indices = indices;
+	Mesh::textures = textures;
 
-	setupMesh();
+	m_VertexArray.CreateArrays(vertices, indices);
 }
 
-
-void Mesh::setupMesh()
+void Mesh::Draw(Shader& shader,
+	const Camera& camera,
+	glm::mat4 matrix,
+	glm::vec3 translation,
+	glm::quat rotation,
+	glm::vec3 scale)
 {
-	vao.Bind();
-	vbo = VBO(vertices);
-	ebo = EBO(indices);
 
-	vao.LinkAttrib(vbo, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
-	vao.LinkAttrib(vbo, 2, 3, GL_FLOAT, sizeof(Vertex), (void*)(6 * sizeof(float)));
-	vao.LinkAttrib(vbo, 3, 2, GL_FLOAT, sizeof(Vertex), (void*)(9 * sizeof(float)));
-	vao.LinkAttrib(vbo, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
+	if (!shader.ID) {
+		LOG_ERROR("Invalid shader program");
+		return;
+	}
 
-	vao.Unbind();
-	vbo.Unbind();
-	ebo.Unbind();
+	shader.Activate();
+	m_VertexArray.Bind();
+
+	// bind appropriate textures
+	// Keep track of how many of each type of textures we have
+	unsigned int numDiffuse = 0;
+	unsigned int numSpecular = 0;
+
+	for (unsigned int i = 0; i < textures.size(); i++)
+	{
+		std::string num;
+		std::string type = textures[i].GetType();
+		if (type == "diffuse")
+		{
+			num = std::to_string(numDiffuse++);
+		}
+		else if (type == "specular")
+		{
+			num = std::to_string(numSpecular++);
+		}
+		textures[i].texUnit(shader, (type + num).c_str(), i);
+		textures[i].Bind();
+	}
+	// Take care of the camera Matrix
+	glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+	camera.MatrixUniform(shader, "camMatrix");
+
+	LOG_DEBUG("Using VAO: %d", m_VertexArray.ID);
+
+	// Initialize matrices
+	glm::mat4 trans = glm::mat4(1.0f);
+	glm::mat4 rot = glm::mat4(1.0f);
+	glm::mat4 sca = glm::mat4(1.0f);
+
+	// Transform the matrices to their correct form
+	trans = glm::translate(trans, translation);
+	rot = glm::mat4_cast(rotation);
+	sca = glm::scale(sca, scale);
+
+	// Push the matrices to the vertex shader
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(matrix));
+
+	GLint vao, vbo, ebo;
+	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
+	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
+	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ebo);
+
+	LOG_DEBUG("VAO: %d, VBO: %d, EBO: %d", vao, vbo, ebo);
+
+	// Draw the actual mesh
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+	// m_VAO.Unbind();
 }
 
-void Mesh::Draw(Shader& shader)
+void Mesh::Delete()
 {
-    // bind appropriate textures
-    unsigned int diffuseNr = 1;
-    unsigned int specularNr = 1;
-    unsigned int normalNr = 1;
-    unsigned int heightNr = 1;
-
-    for (unsigned int i = 0; i < textures.size(); i++)
-    {
-        std::string number;
-        std::string name = textures[i].type;
-        if (name == "texture_diffuse")
-            number = std::to_string(diffuseNr++);
-        else if (name == "texture_specular")
-            number = std::to_string(specularNr++); // transfer unsigned int to string
-        else if (name == "texture_normal")
-            number = std::to_string(normalNr++); // transfer unsigned int to string
-        else if (name == "texture_height")
-            number = std::to_string(heightNr++); // transfer unsigned int to string
-
-        textures[i].texUnit(shader, (name + number).c_str(), i);
-        textures[i].Bind();
-    }
-
-    // draw mesh
-    vao.Bind();
-    glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
-    vao.Unbind();
-
-    glActiveTexture(GL_TEXTURE0);
+	m_VertexArray.Delete();
 }

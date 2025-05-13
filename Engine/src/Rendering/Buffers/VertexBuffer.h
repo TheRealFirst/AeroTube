@@ -15,12 +15,12 @@ struct Vertex
 };
 
 
-class VBO
+class VertexBuffer
 {
 public:
-	GLuint ID;
-	VBO() = default;
-	VBO(std::vector <Vertex>& vertices);
+	GLuint ID = 0;
+	VertexBuffer() = default;
+	VertexBuffer(std::vector <Vertex>& vertices);
 
 	void Bind();
 	void Unbind();

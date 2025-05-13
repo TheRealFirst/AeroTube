@@ -37,9 +37,14 @@ void Camera::OnUpdate(Engine::Timestep ts)
 	UpdateView();
 }
 
-void Camera::Matrix(Shader& shader, const char* uniform) const
+void Camera::MatrixUniform(Shader& shader, const char* uniform) const
 {
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(m_Projection *  m_View));
+}
+
+void Camera::PositionUniform(Shader& shader, const char* uniform) const
+{
+	glUniform3fv(glGetUniformLocation(shader.ID, uniform), 1, glm::value_ptr(Position));
 }
 
 void Camera::Inputs(Engine::Timestep ts)

@@ -11,27 +11,27 @@ class Texture
 {
 public:
 	GLuint ID;
-	const char* type;
 	GLuint unit;
-	const char* path;
 
-	Texture() = default;
 	Texture(const char* image, const char* texType, GLuint slot);
 
-	// Static method to load a texture with caching
-	static Texture LoadTexture(const char* image, const char* texType, GLuint slot);
-
-	unsigned int TextureFromFile(const char* path, const std::string& directory);
-
-	// Clear the texture cache
-	static void ClearTextureCache();
-
+	// Assigns a texture unit to a texture
 	void texUnit(Shader& shader, const char* uniform, GLuint unit);
+	// Binds a texture
 	void Bind();
-	void UnBind();
+	// Unbinds a texture
+	void Unbind();
+	// Deletes a texture
 	void Delete();
 
-	// Static texture cache
-	static std::unordered_map<std::string, Texture> s_TextureCache;
+	inline const char* GetType() { return m_Type; }
+	inline void SetType(const char* type) { m_Type = type; }
+
+	inline const char* GetPath() { return m_Path; }
+	inline void SetPath(const char* path) { m_Path = path; }
+
+private:
+	const char* m_Type;
+	const char* m_Path;
 };
 

@@ -7,13 +7,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "imgui.h"
+#include <filesystem>
 
-Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height), model("assets/models/bunny/scene.gltf")
+Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height), model("Assets/Models/bunny/scene.gltf")
 {
 	// Use the member variables for light properties
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, m_LightPosition);
 
+	std::cout << "Working directory: " << std::filesystem::current_path() << "\n";
 
 	shaderProgram.Activate();
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
@@ -47,33 +49,31 @@ void Renderer::Clear(const glm::vec4& color)
 
 void Renderer::Render(float deltaTime, const Camera& camera)
 {
-	// Tell OpenGL which Shader Program we want to use
+	// Clear any existing errors at start of frame
+	GLenum err;
+	while ((err = glGetError()) != GL_NO_ERROR) {
+		LOG_DEBUG("Clearing previous OpenGL error: 0x%x", err);
+	}
+	
 	shaderProgram.Activate();
 
-	// Update light properties
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
+	// Verify shader activation
+	GLint currentProgram = 0;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+	if (currentProgram != shaderProgram.ID) {
+		LOG_ERROR("Shader activation failed. Expected: %d, Got: %d", shaderProgram.ID, currentProgram);
+		return;
+	}
 
-	// Create model matrix from transformation properties
-	glm::mat4 modelMatrix = glm::mat4(1.0f);
+	// Update uniforms
+	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), 
+		m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
+	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 
+		m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 
-	// Apply transformations in the correct order: scale, rotate, translate
-	modelMatrix = glm::translate(modelMatrix, m_ModelPosition);
 
-	// Apply rotation around each axis
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(m_ModelRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(m_ModelRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(m_ModelRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
-
-	modelMatrix = glm::scale(modelMatrix, m_ModelScale);
-
-	// Set the model matrix uniform
-	glUniformMatrix4fv(glGetUniformLocation(shaderProgram.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-	camera.Matrix(shaderProgram, "camMatrix");
-	model.Draw(shaderProgram);
-
-	m_TestScene->DrawScene(camera.Position, camera.Orientation, camera.Up, m_Width, m_Height);
+	// Draw model
+	model.Draw(shaderProgram, camera);
 }
 
 void Renderer::OnWindowResize(uint32_t newWidth, uint32_t newHeight)
