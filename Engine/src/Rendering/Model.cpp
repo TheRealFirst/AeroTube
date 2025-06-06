@@ -115,6 +115,8 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 			);
 		}
 
+		vertex.color = glm::vec3(1.0f, 1.0f, 1.0f);
+
 		// Texture coordinates
 		if (mesh->mTextureCoords[0])
 		{
@@ -179,12 +181,13 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 		mat->GetTexture(type, i, &str);
 		bool skip = false;
 
+
 		std::string fullpath = std::string(m_Path) + "/" + std::string(str.C_Str());
 		
 		// Compare strings using std::string comparison instead of strcmp
 		for (unsigned int j = 0; j < loaded_textures.size(); j++)
 		{
-			if (loaded_textures[j].GetPath() == str.C_Str())
+			if (loaded_textures[j].GetPath() == fullpath.c_str())
 			{
 				textures.push_back(loaded_textures[j]);
 				skip = true;
@@ -194,7 +197,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType 
 
 		if (!skip)
 		{
-			Texture texture(fullpath.c_str(), typeName.c_str(), 0);
+			Texture texture(fullpath.c_str(), typeName.c_str(), loaded_textures.size());
 			textures.push_back(texture);
 			loaded_textures.push_back(texture);
 			LOG_DEBUG("Loaded Texture");

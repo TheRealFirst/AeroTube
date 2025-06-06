@@ -9,10 +9,10 @@ VertexArray::VertexArray()
 
 void VertexArray::LinkAttrib(GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset)
 {
-	m_VertexBuffer.Bind();
+	// m_VertexBuffer.Bind();
 	glVertexAttribPointer(layout, numComponents, type, GL_FALSE, stride, offset);
 	glEnableVertexAttribArray(layout);
-	m_VertexBuffer.Unbind();
+	// m_VertexBuffer.Unbind();
 }
 
 void VertexArray::CreateArrays(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
@@ -20,7 +20,9 @@ void VertexArray::CreateArrays(std::vector<Vertex> vertices, std::vector<unsigne
 	Bind();
 
 	m_VertexBuffer = VertexBuffer(vertices);
+	m_VertexBuffer.Bind();
 	m_IndexBuffer = IndexBuffer(indices);
+	m_IndexBuffer.Bind();
 
 	LinkAttrib(0, 3, GL_FLOAT, sizeof(Vertex), (void*)0);
 	LinkAttrib(1, 3, GL_FLOAT, sizeof(Vertex), (void*)(3 * sizeof(float)));
@@ -30,6 +32,9 @@ void VertexArray::CreateArrays(std::vector<Vertex> vertices, std::vector<unsigne
 	Unbind();
 	m_VertexBuffer.Unbind();
 	m_IndexBuffer.Unbind();
+
+	LOG_DEBUG("Inside CreateArrays - VAO: %u, VBO: %u, EBO: %u",
+		ID, m_VertexBuffer.ID, m_IndexBuffer.ID);
 }
 
 void VertexArray::Bind()

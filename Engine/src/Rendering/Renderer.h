@@ -1,9 +1,6 @@
 #pragma once
 
 #include "ShaderClass.h"
-#include "Buffers\VAO.h"
-#include "Buffers\VBO.h"
-#include "Buffers\EBO.h"
 #include "Texture.h"
 #include "glm\glm.hpp"
 
@@ -57,7 +54,7 @@ private:
 
 	// Light properties
 	glm::vec3 m_LightPosition = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec4 m_LightColor = glm::vec4(1.2f, 1.2f, 1.2f, 1.0f);
+	glm::vec4 m_LightColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	Scene* m_TestScene; // TODO: Move to Editorlayer
 };

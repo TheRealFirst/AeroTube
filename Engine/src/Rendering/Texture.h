@@ -24,14 +24,14 @@ public:
 	// Deletes a texture
 	void Delete();
 
-	inline const char* GetType() { return m_Type; }
-	inline void SetType(const char* type) { m_Type = type; }
+	inline std::string GetType() { return m_Type; }
+	inline void SetType(std::string type) { m_Type = type; }
 
-	inline const char* GetPath() { return m_Path; }
-	inline void SetPath(const char* path) { m_Path = path; }
+	inline std::string GetPath() { return m_Path; }
+	inline void SetPath(std::string path) { m_Path = path; }
 
 private:
-	const char* m_Type;
-	const char* m_Path;
+	std::string m_Type;
+	std::string m_Path;
 };
 

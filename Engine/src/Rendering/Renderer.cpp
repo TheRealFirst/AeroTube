@@ -6,8 +6,10 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+
 #include "imgui.h"
 #include <filesystem>
+
 
 Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height), model("Assets/Models/bunny/scene.gltf")
 {
@@ -16,6 +18,7 @@ Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shad
 	lightModel = glm::translate(lightModel, m_LightPosition);
 
 	std::cout << "Working directory: " << std::filesystem::current_path() << "\n";
+
 
 	shaderProgram.Activate();
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
@@ -65,12 +68,13 @@ void Renderer::Render(float deltaTime, const Camera& camera)
 		return;
 	}
 
+	/*
 	// Update uniforms
 	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), 
 		m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
 	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 
 		m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-
+	*/
 
 	// Draw model
 	model.Draw(shaderProgram, camera);

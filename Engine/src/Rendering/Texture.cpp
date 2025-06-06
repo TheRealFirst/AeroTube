@@ -16,6 +16,10 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 	// Reads the image from a file and stores it in bytes
 	unsigned char* bytes = stbi_load(image, &widthImg, &heightImg, &numColCh, 0);
 
+	if (!bytes) {
+		LOG_ERROR("Failed to load texture image at path: %s", image);
+	}
+
 	// Generates an OpenGL texture object
 	glGenTextures(1, &ID);
 	// Assigns the texture to a Texture Unit
@@ -54,7 +58,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		(
 			GL_TEXTURE_2D,
 			0,
-			GL_RGBA,
+			GL_RGB8,
 			widthImg,
 			heightImg,
 			0,
@@ -63,11 +67,11 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 			bytes
 		);
 	else if (numColCh == 1)
-		glTexImage2D
+		glad_glTexImage2D
 		(
 			GL_TEXTURE_2D,
 			0,
-			GL_RGBA,
+			GL_RED,
 			widthImg,
 			heightImg,
 			0,
@@ -77,6 +81,7 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 		);
 	else
 		throw std::invalid_argument("Automatic Texture type recognition failed");
+
 
 	// Generates MipMaps
 	glGenerateMipmap(GL_TEXTURE_2D);
