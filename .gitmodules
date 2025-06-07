@@ -10,3 +10,6 @@
 [submodule "Engine/vendor/imgui"]
 	path = Engine/vendor/imgui
 	url = https://github.com/TheRealFirst/imgui
+[submodule "Engine/vendor/tinygltf"]
+	path = Engine/vendor/tinygltf
+	url = https://github.com/TheRealFirst/tinygltf

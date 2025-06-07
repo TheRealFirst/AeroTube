@@ -1,20 +1,23 @@
 #pragma once
 
+#include "../../vendor/tinygltf/tiny_gltf.h"
 #include <unordered_map>
 #include "Mesh.h"
 
 #include "Texture.h"
 
-#include <assimp/scene.h>
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-
 #include <filesystem>
+
+
+// namespace tinygltf {
+//     class Model;
+//     struct Primitive;
+// }
 
 class Model
 {
 public:
-    Model(const char* path)
+    Model(std::string path)
     {
         std::filesystem::path modelPath(path);
         m_Path = modelPath.parent_path().string();
@@ -22,8 +25,16 @@ public:
     }
     void Draw(Shader& shader, const Camera& camera);
 private:
+    void loadModel(std::string &path);
+    void ProcessPrimitive(const tinygltf::Primitive& primitive);
+
+    static glm::vec3 ReadVec3(const float* data);
+    static glm::vec2 ReadVec2(const float* data);
+
+private:
     // model data
-    std::vector<Mesh> meshes;
+    std::unique_ptr<tinygltf::Model> m_Model;
+    std::vector<Mesh> m_Meshes;
     std::string directory;
 
     std::string m_Path;
@@ -32,11 +43,6 @@ private:
 
     std::vector<glm::mat4> matricesMeshes;
 
-    void loadModel(std::string path);
-    void processNode(aiNode* node, const aiScene* scene);
-    Mesh processMesh(aiMesh* mesh, const aiScene* scene);
-    std::vector<Texture> loadMaterialTextures(aiMaterial* mat, aiTextureType type,
-        std::string typeName);
 };
 
 

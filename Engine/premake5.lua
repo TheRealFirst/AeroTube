@@ -18,6 +18,10 @@ project "Engine"
 		"vendor/glm/glm/**.hpp",
 		"vendor/glm/glm/**.inl",
 		"vendor/json/json.h",
+		"vendor/tinygltf/tiny_gltf.h",
+		-- "vendor/tinygltf/json.hpp",
+		-- "vendor/tinygltf/stb_image.h",
+		"vendor/tinygltf/stb_image_write.h",
 	}
 
 	defines{
@@ -35,12 +39,9 @@ project "Engine"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.json}",
-		"%{IncludeDir.assimp}",
+		"%{IncludeDir.tinygltf}",
 	}
 	
-	libdirs {
-        "%{prj.location}/vendor/assimp/bin/" .. outputdir .. "/assimp"
-    }
 
 	links{
 		"yaml-cpp",
@@ -48,8 +49,10 @@ project "Engine"
 		"glad",
 		"ImGui",
 		"opengl32.lib",
-		"assimp.lib",
+		-- "tinygltf.lib",
 	}
+
+	
 
 	filter "system:windows"
 		systemversion "latest"
