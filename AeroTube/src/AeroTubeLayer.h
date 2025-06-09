@@ -30,7 +30,7 @@ namespace Engine {
         Ref<Framebuffer> m_Framebuffer;
 
         Camera m_Camera;
-        Renderer* m_Renderer;
+        Scene m_Scene;
 
         SettingsPanel m_SettingsPanel;
 	};

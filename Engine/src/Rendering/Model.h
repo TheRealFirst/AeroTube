@@ -26,7 +26,8 @@ public:
     void Draw(Shader& shader, const Camera& camera);
 private:
     void loadModel(std::string &path);
-    void ProcessPrimitive(const tinygltf::Primitive& primitive);
+    void ProcessNode(int nodeIndex, const glm::mat4& parentTransform);
+    void ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform);
 
     static glm::vec3 ReadVec3(const float* data);
     static glm::vec2 ReadVec2(const float* data);
@@ -39,7 +40,8 @@ private:
 
     std::string m_Path;
 
-    std::vector<Texture> loaded_textures;
+    std::vector<std::unordered_map<TextureType, Engine::Ref<Texture>>> material_textures;
+    std::vector<Engine::Ref<Texture>> loaded_textures;
 
     std::vector<glm::mat4> matricesMeshes;
 

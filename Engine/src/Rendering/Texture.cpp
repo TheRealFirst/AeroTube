@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 
-Texture::Texture(const char* image, const char* texType, GLuint slot)
+Texture::Texture(const char* image, TextureType texType, GLuint slot)
 {
 	// Assigns the type of the texture ot the texture object
 	m_Type = texType;
@@ -21,11 +21,12 @@ Texture::Texture(const char* image, const char* texType, GLuint slot)
 	}
 
 	// Generates an OpenGL texture object
-	glGenTextures(1, &ID);
+	glGenTextures(1, &m_ID);
 	// Assigns the texture to a Texture Unit
 	glActiveTexture(GL_TEXTURE0 + slot);
-	unit = slot;
-	glBindTexture(GL_TEXTURE_2D, ID);
+	m_Unit = slot;
+	glBindTexture(GL_TEXTURE_2D, m_ID);
+	glBindTexture(GL_TEXTURE_2D, m_ID);
 
 	// Configures the type of algorithm that is used to make the image smaller or bigger
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
@@ -105,8 +106,8 @@ void Texture::texUnit(Shader& shader, const char* uniform, GLuint unit)
 
 void Texture::Bind()
 {
-	glActiveTexture(GL_TEXTURE0 + unit);
-	glBindTexture(GL_TEXTURE_2D, ID);
+	glActiveTexture(GL_TEXTURE0 + m_Unit);
+	glBindTexture(GL_TEXTURE_2D, m_ID);
 }
 
 void Texture::Unbind()
@@ -116,5 +117,5 @@ void Texture::Unbind()
 
 void Texture::Delete()
 {
-	glDeleteTextures(1, &ID);
+	glDeleteTextures(1, &m_ID);
 }

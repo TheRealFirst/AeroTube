@@ -3,19 +3,20 @@
 #include "glad/glad.h"
 
 #include "OpenGLContext.h"
+#include "Renderer.h"
 
 
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::unordered_map<TextureType, Engine::Ref<Texture>> textures)
 {
 	LOG_DEBUG("Creating mesh with %d vertices, %d indices, %d textures", 
 		vertices.size(), indices.size(), textures.size());
 	
-	Mesh::vertices = vertices;
-	Mesh::indices = indices;
-	Mesh::textures = textures;
+	Mesh::m_Vertices = vertices;
+	Mesh::m_Indices = indices;
+	Mesh::m_Textures = textures;
 
-	m_VertexArray.CreateArrays(Mesh::vertices, Mesh::indices);
+	m_VertexArray.CreateArrays(Mesh::m_Vertices, Mesh::m_Indices);
 	glCheckError();
 }
 
@@ -35,26 +36,29 @@ void Mesh::Draw(Shader& shader,
 	shader.Activate();
 	m_VertexArray.Bind();
 
-	// bind appropriate textures
-	// Keep track of how many of each type of textures we have
-	unsigned int numDiffuse = 0;
-	unsigned int numSpecular = 0;
-
-	for (unsigned int i = 0; i < textures.size(); i++)
-	{
-		std::string num;
-		std::string type = textures[i].GetType();
-		if (type == "texture_diffuse")
-		{
-			num = std::to_string(numDiffuse++);
-		}
-		else if (type == "texture_specular")
-		{
-			num = std::to_string(numSpecular++);
-		}
-		textures[i].texUnit(shader, (type + num).c_str(), i);
-		textures[i].Bind();
+	GLint currentProgram;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+	if (currentProgram != shader.ID) {
+		LOG_ERROR("Shader program mismatch! Expected: %d, Got: %d", shader.ID, currentProgram);
 	}
+
+	int slot = 0;
+	for (const auto& [type, tex] : m_Textures) {
+		std::string uniformName;
+		switch (type) {
+		case TextureType::Diffuse: uniformName = "u_DiffuseMap"; break;
+		case TextureType::Normal: uniformName = "u_NormalMap"; break;
+		case TextureType::MetallicRoughness: uniformName = "u_MetallicRoughnessMap"; break;
+		case TextureType::Emissive: uniformName = "u_EmissiveMap"; break;
+		case TextureType::Occlusion: uniformName = "u_OcclusionMap"; break;
+		default: continue;
+		}
+
+		tex->texUnit(shader, uniformName.c_str(), slot);
+		tex->Bind();
+		++slot;
+	}
+
 	// Take care of the camera Matrix
 	glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
 	camera.MatrixUniform(shader, "camMatrix");
@@ -74,17 +78,13 @@ void Mesh::Draw(Shader& shader,
 	glm::mat4 modelMatrix = matrix * glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
 	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
 
-	GLint vao, vbo, ebo;
-	glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &vao);
-	glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &vbo);
-	glGetIntegerv(GL_ELEMENT_ARRAY_BUFFER_BINDING, &ebo);
-
-	LOG_DEBUG("VAO: %d, VBO: %d, EBO: %d", vao, vbo, ebo);
-
 	glCheckError();
 	// Draw the actual mesh
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, (void*)0);
+	// glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, (void*)0);
 	glCheckError();
+
+	Renderer::Render(m_Indices.size());
+
 	// glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 	m_VertexArray.Unbind();
 }

@@ -24,6 +24,7 @@ Camera::Camera(uint32_t width, uint32_t height, glm::vec3 position, float FOVdeg
 void Camera::UpdateView()
 {
 	m_View = glm::lookAt(Position, Position + Orientation, Up);
+	m_ViewProjection = m_Projection * m_View;
 }
 
 void Camera::UpdateProjection()
@@ -39,7 +40,7 @@ void Camera::OnUpdate(Engine::Timestep ts)
 
 void Camera::MatrixUniform(Shader& shader, const char* uniform) const
 {
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(m_Projection *  m_View));
+	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(m_ViewProjection));
 }
 
 void Camera::PositionUniform(Shader& shader, const char* uniform) const

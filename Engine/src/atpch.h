@@ -15,6 +15,7 @@
 
 #include "Logging\Log.h"
 #include "Logging\asserts.h"
+#include "Core\Core.h"
 
 #ifdef PLATFORM_WINDOWS
 	#include <Windows.h>

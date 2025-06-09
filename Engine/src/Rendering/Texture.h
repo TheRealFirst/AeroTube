@@ -4,16 +4,22 @@
 #include <string>
 #include "ShaderClass.h"
 
-typedef unsigned int GLuint;
-typedef unsigned int GLenum;
+
+enum class TextureType {
+	Diffuse,
+	Normal,
+	MetallicRoughness,
+	Occlusion,
+	Emissive,
+	Unknown
+};
 
 class Texture
 {
 public:
-	GLuint ID;
-	GLuint unit;
+	
 
-	Texture(const char* image, const char* texType, GLuint slot);
+	Texture(const char* image, TextureType texType, GLuint slot);
 
 	// Assigns a texture unit to a texture
 	void texUnit(Shader& shader, const char* uniform, GLuint unit);
@@ -24,14 +30,22 @@ public:
 	// Deletes a texture
 	void Delete();
 
-	inline std::string GetType() { return m_Type; }
-	inline void SetType(std::string type) { m_Type = type; }
+	inline TextureType GetType() { return m_Type; }
+	inline void SetType(TextureType type) { m_Type = type; }
 
 	inline std::string GetPath() { return m_Path; }
 	inline void SetPath(std::string path) { m_Path = path; }
 
+	inline uint32_t GetID() { return m_ID; }
+	inline void SetID(uint32_t ID) { m_ID = ID; }
+
+	inline uint32_t GetUnit() { return m_Unit; }
+	inline void SetUnit(uint32_t unit) { m_Unit = unit; }
+
 private:
-	std::string m_Type;
+	uint32_t m_ID;
+	uint32_t m_Unit;
+	TextureType m_Type;
 	std::string m_Path;
 };
 

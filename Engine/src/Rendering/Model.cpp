@@ -14,14 +14,6 @@
 
 void Model::Draw(Shader& shader, const Camera& camera)
 {
-	// Verify shader is active
-	GLint currentProgram = 0;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-	if (currentProgram != shader.ID) {
-		LOG_ERROR("Shader program mismatch! Expected: %d, Got: %d", shader.ID, currentProgram);
-		shader.Activate();
-	}
-
 	LOG_DEBUG("Drawing m_Model with %d meshes", m_Meshes.size());
 	
 	// Check if we have any meshes to draw
@@ -31,14 +23,6 @@ void Model::Draw(Shader& shader, const Camera& camera)
 	}
 
 	for (unsigned int i = 0; i < m_Meshes.size(); i++) {
-		LOG_DEBUG("Drawing mesh %d with %d vertices", i, m_Meshes[i].vertices.size());
-		
-		// Verify mesh data
-		if (m_Meshes[i].vertices.empty() || m_Meshes[i].indices.empty()) {
-			LOG_ERROR("Mesh %d has invalid data! Vertices: %d, Indices: %d", 
-				i, m_Meshes[i].vertices.size(), m_Meshes[i].indices.size());
-			continue;
-		}
 		
 		m_Meshes[i].Draw(shader, camera);
 		// meshes[i].Draw(shader, camera, matricesMeshes[i]);
@@ -68,18 +52,101 @@ void Model::loadModel(std::string &path)
 	else
 		LOG_INFO("Loaded glTF:%s", path.c_str());
 
-	for (const auto& gltfMesh : m_Model->meshes) {
-		for (const auto& primitive : gltfMesh.primitives) {
-			if (primitive.mode != TINYGLTF_MODE_TRIANGLES) continue;
-			ProcessPrimitive(primitive);
-		}
+	for (const auto& material : m_Model->materials) {
+		std::unordered_map<TextureType, Engine::Ref<Texture>> matTextures;
+
+		auto loadTextureFromIndex = [&](int index, TextureType texType) {
+			if (index < 0 || index >= m_Model->textures.size()) return;
+
+			const auto& gltfTex = m_Model->textures[index];
+			const auto& image = m_Model->images[gltfTex.source];
+			std::string texPath = image.uri;
+			std::string fullPath = m_Path + "/" + texPath;
+
+			// Check if already loaded (optional cache)
+			auto tex = Engine::CreateRef<Texture>(fullPath.c_str(), texType, loaded_textures.size());
+			loaded_textures.push_back(tex);
+			matTextures[texType] = tex;
+			};
+
+		// Diffuse/BaseColor
+		if (material.pbrMetallicRoughness.baseColorTexture.index >= 0)
+			loadTextureFromIndex(material.pbrMetallicRoughness.baseColorTexture.index, TextureType::Diffuse);
+
+		// Normal Map
+		if (material.normalTexture.index >= 0)
+			loadTextureFromIndex(material.normalTexture.index, TextureType::Normal);
+
+		// Metallic-Roughness
+		if (material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0)
+			loadTextureFromIndex(material.pbrMetallicRoughness.metallicRoughnessTexture.index, TextureType::MetallicRoughness);
+
+		// Emissive
+		if (material.emissiveTexture.index >= 0)
+			loadTextureFromIndex(material.emissiveTexture.index, TextureType::Emissive);
+
+		// Occlusion
+		if (material.occlusionTexture.index >= 0)
+			loadTextureFromIndex(material.occlusionTexture.index, TextureType::Occlusion);
+
+		// Save per-material texture set (you'll associate it with a mesh later)
+		material_textures.push_back(matTextures); // add this vector to Model class
+	}
+
+	int sceneIndex = m_Model->defaultScene > -1 ? m_Model->defaultScene : 0;
+	const auto& scene = m_Model->scenes[sceneIndex];
+	for (int nodeIndex : scene.nodes) {
+		ProcessNode(nodeIndex, glm::mat4(1.0f));  // Identity for root
 	}
 }
 
-void Model::ProcessPrimitive(const tinygltf::Primitive& primitive)
+void Model::ProcessNode(int nodeIndex, const glm::mat4& parentTransform)
+{
+	const tinygltf::Node& node = m_Model->nodes[nodeIndex];
+
+	glm::mat4 localTransform = glm::mat4(1.0f);
+
+	if (node.matrix.size() == 16) {
+		localTransform = glm::make_mat4(node.matrix.data());
+	}
+	else {
+		if (node.translation.size() == 3)
+			localTransform = glm::translate(localTransform, glm::vec3(
+				node.translation[0], node.translation[1], node.translation[2]));
+		if (node.rotation.size() == 4)
+			localTransform *= glm::mat4_cast(glm::quat(
+				node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2])); // WXYZ
+		if (node.scale.size() == 3)
+			localTransform = glm::scale(localTransform, glm::vec3(
+				node.scale[0], node.scale[1], node.scale[2]));
+	}
+
+	glm::mat4 globalTransform = parentTransform * localTransform;
+
+	if (node.mesh >= 0) {
+		const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
+		for (const auto& primitive : mesh.primitives) {
+			if (primitive.mode == TINYGLTF_MODE_TRIANGLES) {
+				ProcessPrimitive(primitive , globalTransform);
+			}
+		}
+	}
+
+	for (int childIndex : node.children) {
+		ProcessNode(childIndex, globalTransform);
+	}
+}
+
+void Model::ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform)
 {
 	std::vector<Vertex> vertices;
 	std::vector<uint32_t> indices;
+
+	std::unordered_map<TextureType, Engine::Ref<Texture>> meshTextures;
+
+	if (primitive.material >= 0 && primitive.material < material_textures.size()) {
+		meshTextures = material_textures[primitive.material];
+	}
 
 	const auto& posAccessor = m_Model->accessors.at(primitive.attributes.at("POSITION"));
 	const auto& posBufferView = m_Model->bufferViews.at(posAccessor.bufferView);
@@ -104,8 +171,8 @@ void Model::ProcessPrimitive(const tinygltf::Primitive& primitive)
 
 	for (size_t i = 0; i < posAccessor.count; ++i) {
 		Vertex v;
-		v.position = ReadVec3(posData + i * 3);
-		v.normal = normalData ? ReadVec3(normalData + i * 3) : glm::vec3(0.0f);
+		v.position = glm::vec3(transform * glm::vec4(ReadVec3(posData + i * 3), 1.0f));
+		v.normal = normalData ? glm::normalize(glm::mat3(glm::transpose(glm::inverse(transform))) * ReadVec3(normalData + i * 3)) : glm::vec3(0.0f);
 		v.color = glm::vec3(1.0f);
 		v.texUV = uvData ? ReadVec2(uvData + i * 2) : glm::vec2(0.0f);
 		vertices.push_back(v);
@@ -128,7 +195,7 @@ void Model::ProcessPrimitive(const tinygltf::Primitive& primitive)
 		}
 	}
 
-	m_Meshes.emplace_back(vertices, indices, loaded_textures);
+	m_Meshes.emplace_back(vertices, indices, meshTextures);
 }
 
 glm::vec3 Model::ReadVec3(const float* data) {

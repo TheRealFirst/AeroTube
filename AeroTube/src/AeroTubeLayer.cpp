@@ -14,8 +14,9 @@ namespace Engine {
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 3840;
 		fbSpec.Height = 2160;
-		m_Renderer = new Renderer(fbSpec.Width, fbSpec.Height);
 		m_Framebuffer = CreateRef<Framebuffer>(fbSpec);
+
+		m_Scene = Scene();
 
 		m_Camera = Camera(fbSpec.Width, fbSpec.Height, glm::vec3(0, 0, -2), 45, 0.1f, 1000.0f);
 
@@ -24,7 +25,6 @@ namespace Engine {
 
 	void AeroTubeLayer::OnDetach()
 	{
-		delete m_Renderer;
 	}
 
 	void AeroTubeLayer::OnUpdate(Timestep ts)
@@ -42,11 +42,9 @@ namespace Engine {
 
 		m_Framebuffer->Bind();
 
-		m_Renderer->Clear({ 0.1f, 0.1f, 0.1f, 1 });
-
 		m_Framebuffer->ClearAttachment(1, -1);
 
-		m_Renderer->Render(ts, m_Camera);
+		m_Scene.DrawScene(m_Camera);
 
 		m_Framebuffer->Unbind();
 	}
@@ -142,32 +140,6 @@ namespace Engine {
 				ImGui::EndMenu();
 			}
 
-			if (ImGui::BeginMenu("Models"))
-			{
-				if (ImGui::MenuItem("Bunny"))
-				{
-					m_Renderer->LoadModel("Assets/Models/bunny/scene.gltf");
-
-					// Apply specific transformations for the bunny model
-					m_Renderer->SetModelPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-					m_Renderer->SetModelRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-					m_Renderer->SetModelScale(glm::vec3(1.0f));
-				}
-				if (ImGui::MenuItem("Adam Head"))
-				{
-					m_Renderer->LoadModel("Assets/Models/adamHead/adamHead.gltf");
-
-					// Apply specific transformations for the adamHead model
-					m_Renderer->SetModelPosition(glm::vec3(0.0f, -0.5f, 0.0f));
-					m_Renderer->SetModelRotation(glm::vec3(0.0f, 180.0f, 0.0f));
-					m_Renderer->SetModelScale(glm::vec3(0.5f));
-
-					// Set optimal lighting for Adam Head
-					m_Renderer->SetLightPosition(glm::vec3(0.0f, 1.0f, 2.0f));
-					m_Renderer->SetLightColor(glm::vec4(1.8f, 1.8f, 1.8f, 1.0f));
-				}
-				ImGui::EndMenu();
-			}
 
 			ImGui::EndMenuBar();
 		}
@@ -175,93 +147,6 @@ namespace Engine {
 		ImGui::Begin("Stats");
 
 		ImGui::Text("No Stats available yet");
-
-		ImGui::End();
-
-		// Model Settings Panel
-		ImGui::Begin("Model Settings");
-
-		// Get current model transformations
-		glm::vec3 modelPosition = m_Renderer->GetModelPosition();
-		glm::vec3 modelRotation = m_Renderer->GetModelRotation();
-		glm::vec3 modelScale = m_Renderer->GetModelScale();
-
-		// Get current light properties
-		glm::vec3 lightPosition = m_Renderer->GetLightPosition();
-		glm::vec4 lightColor = m_Renderer->GetLightColor();
-
-		// Position controls
-		ImGui::Text("Position");
-		if (ImGui::DragFloat3("##Position", glm::value_ptr(modelPosition), 0.1f))
-		{
-			m_Renderer->SetModelPosition(modelPosition);
-		}
-
-		// Rotation controls
-		ImGui::Text("Rotation");
-		if (ImGui::DragFloat3("##Rotation", glm::value_ptr(modelRotation), 1.0f))
-		{
-			m_Renderer->SetModelRotation(modelRotation);
-		}
-
-		// Scale controls
-		ImGui::Text("Scale");
-		if (ImGui::DragFloat3("##Scale", glm::value_ptr(modelScale), 0.1f, 0.1f, 10.0f))
-		{
-			m_Renderer->SetModelScale(modelScale);
-		}
-
-		ImGui::Separator();
-		ImGui::Text("Light Settings");
-
-		// Light position controls
-		ImGui::Text("Light Position");
-		if (ImGui::DragFloat3("##LightPosition", glm::value_ptr(lightPosition), 0.1f))
-		{
-			m_Renderer->SetLightPosition(lightPosition);
-		}
-
-		// Light color controls
-		ImGui::Text("Light Color");
-		if (ImGui::ColorEdit3("##LightColor", glm::value_ptr(lightColor)))
-		{
-			m_Renderer->SetLightColor(lightColor);
-		}
-
-		// Presets
-		ImGui::Text("Presets");
-
-		// Reset button
-		if (ImGui::Button("Reset"))
-		{
-			m_Renderer->SetModelPosition(glm::vec3(0.0f));
-			m_Renderer->SetModelRotation(glm::vec3(0.0f));
-			m_Renderer->SetModelScale(glm::vec3(1.0f));
-		}
-
-		ImGui::SameLine();
-
-		// Bunny preset
-		if (ImGui::Button("Bunny"))
-		{
-			m_Renderer->SetModelPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-			m_Renderer->SetModelRotation(glm::vec3(0.0f, 0.0f, 0.0f));
-			m_Renderer->SetModelScale(glm::vec3(1.0f));
-		}
-
-		ImGui::SameLine();
-
-		// Adam Head preset
-		if (ImGui::Button("Adam Head"))
-		{
-			m_Renderer->SetModelPosition(glm::vec3(0.0f, -0.5f, 0.0f));
-			m_Renderer->SetModelRotation(glm::vec3(0.0f, 180.0f, 0.0f));
-			m_Renderer->SetModelScale(glm::vec3(0.5f));
-
-			// Set optimal lighting for Adam Head
-			m_Renderer->SetLightPosition(glm::vec3(0.0f, 1.0f, 2.0f));
-			m_Renderer->SetLightColor(glm::vec4(1.8f, 1.8f, 1.8f, 1.0f));
-		}
 
 		ImGui::End();
 

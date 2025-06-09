@@ -221,19 +221,12 @@ void Skybox::LoadSkybox(Skybox_Textures* textures)
 	}
 }
 
-void Skybox::DrawSkybox(glm::vec3 camPosition, glm::vec3 camOrientation, glm::vec3 camUp, uint32_t width, uint32_t height)
+void Skybox::DrawSkybox(Camera camera)
 {
 	glDepthFunc(GL_LEQUAL);
 
 	skyboxShader.Activate();
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 projection = glm::mat4(1.0f);
-	// We make the mat4 into a mat3 and then a mat4 again in order to get rid of the last row and column
-	// The last row and column affect the translation of the skybox (which we don't want to affect)
-	view = glm::mat4(glm::mat3(glm::lookAt(camPosition, camPosition + camOrientation, camUp)));
-	projection = glm::perspective(glm::radians(45.0f), (float)width / height, 0.1f, 100.0f);
-	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "view"), 1, GL_FALSE, glm::value_ptr(view));
-	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "viewproj"), 1, GL_FALSE, glm::value_ptr(camera.GetViewProjection()));
 
 	// Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
 	// where an object is present (a depth of 1.0f will always fail against any object's depth value)

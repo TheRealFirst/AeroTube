@@ -38,6 +38,8 @@ public:
 	inline float GetCameraSensitivity() const { return m_Sensitivity; }
 	inline float GetCameraSpeed() const { return m_Speed; }
 
+	inline glm::mat4 GetViewProjection() { return m_ViewProjection; }
+
 
 	glm::vec3 Position;
 	glm::vec3 Orientation = glm::vec3(0.0f, 0.0f, 1.0f);
@@ -45,6 +47,7 @@ public:
 private:
 	glm::mat4 m_Projection = glm::mat4(1.0f);
 	glm::mat4 m_View = glm::mat4(1.0f);
+	glm::mat4 m_ViewProjection = glm::mat4(1.0f);
 
 
 	uint32_t m_Width, m_Height;

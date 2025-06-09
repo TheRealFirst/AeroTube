@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include "ShaderClass.h"
 
+#include "Camera.h"
+
 struct Skybox_Textures 
 {
 	char* right;
@@ -18,7 +20,7 @@ class Skybox
 public:
 	Skybox();
 	void LoadSkybox(Skybox_Textures* textures);
-	void DrawSkybox(glm::vec3 camPosition, glm::vec3 camOrientation, glm::vec3 camUp, uint32_t width, uint32_t height);
+	void DrawSkybox(Camera camera);
 private:
 	Shader skyboxShader;
 

@@ -9,12 +9,7 @@
 
 class Mesh {
 public:
-    // mesh data
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
-
-    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+    Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::unordered_map<TextureType, Engine::Ref<Texture>> textures);
     // Draws the mesh
     void Draw
     (
@@ -28,6 +23,12 @@ public:
     void Delete();
 
 private:
+    // mesh data
+    std::vector<Vertex> m_Vertices;
+    std::vector<unsigned int> m_Indices;
+    std::unordered_map<TextureType, Engine::Ref<Texture>> m_Textures;
+
+
     // render data
     VertexArray m_VertexArray;
 };

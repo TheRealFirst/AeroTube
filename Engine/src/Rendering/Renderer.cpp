@@ -10,6 +10,7 @@
 #include "imgui.h"
 #include <filesystem>
 
+/*
 
 Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shaders/default.vert", "Assets/Shaders/default.frag"), m_Width(width), m_Height(height), model("Assets/Models/bunny/scene.gltf")
 {
@@ -17,29 +18,21 @@ Renderer::Renderer(uint32_t width, uint32_t height) : shaderProgram("Assets/Shad
 	glm::mat4 lightModel = glm::mat4(1.0f);
 	lightModel = glm::translate(lightModel, m_LightPosition);
 
-	std::cout << "Working directory: " << std::filesystem::current_path() << "\n";
-
-
-	shaderProgram.Activate();
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-
 	glEnable(GL_DEPTH_TEST);
 
-	// Disable face culling for now to ensure all models render correctly
-	glDisable(GL_CULL_FACE);
 	// When face culling is enabled, use these settings:
-	// glCullFace(GL_BACK);
-	// glFrontFace(GL_CCW);
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
+}*/
 
 
-	m_TestScene = new Scene();
-}
-
-Renderer::~Renderer()
+void Renderer::SetupRenderer()
 {
-	shaderProgram.Delete();
-	delete m_TestScene;
+	glEnable(GL_DEPTH_TEST);
+
+	// When face culling is enabled, use these settings:
+	glCullFace(GL_BACK);
+	glFrontFace(GL_CCW);
 }
 
 void Renderer::Clear(const glm::vec4& color)
@@ -50,16 +43,14 @@ void Renderer::Clear(const glm::vec4& color)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::Render(float deltaTime, const Camera& camera)
+void Renderer::Render(uint32_t size)
 {
+	/*
 	// Clear any existing errors at start of frame
 	GLenum err;
 	while ((err = glGetError()) != GL_NO_ERROR) {
 		LOG_DEBUG("Clearing previous OpenGL error: 0x%x", err);
 	}
-	
-	shaderProgram.Activate();
-
 	// Verify shader activation
 	GLint currentProgram = 0;
 	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
@@ -68,49 +59,17 @@ void Renderer::Render(float deltaTime, const Camera& camera)
 		return;
 	}
 
-	/*
-	// Update uniforms
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), 
-		m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), 
-		m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
 	*/
 
 	// Draw model
-	model.Draw(shaderProgram, camera);
+	// model.Draw(shaderProgram, camera);
+
+	glDrawElements(GL_TRIANGLES, size, GL_UNSIGNED_INT, (void*)0);
 }
 
-void Renderer::OnWindowResize(uint32_t newWidth, uint32_t newHeight)
+void Renderer::SetLightColor(Shader shader, glm::vec3 lightColor)
 {
-	m_Width = newWidth;
-	m_Height = newHeight;
-}
-
-void Renderer::SetLightPosition(const glm::vec3& position)
-{
-	m_LightPosition = position;
-
-	// Update the light position in the shader
-	shaderProgram.Activate();
-	glUniform3f(glGetUniformLocation(shaderProgram.ID, "lightPos"), m_LightPosition.x, m_LightPosition.y, m_LightPosition.z);
-}
-
-void Renderer::SetLightColor(const glm::vec4& color)
-{
-	m_LightColor = color;
-
-	// Update the light color in the shader
-	shaderProgram.Activate();
-	glUniform4f(glGetUniformLocation(shaderProgram.ID, "lightColor"), m_LightColor.x, m_LightColor.y, m_LightColor.z, m_LightColor.w);
-}
-
-void Renderer::LoadModel(const std::string& modelPath)
-{
-	// No need to delete the old model since it's cached
-	// Just load the new model from cache or create it if not cached
-	// model = Model(modelPath);
-
-	// Log the model loading
-	LOG_INFO("Switched to model: {0}", modelPath);
+	shader.Activate();
+	glUniform4f(glGetUniformLocation(shader.ID, "lightColor"), lightColor.x, lightColor.y, lightColor.z, 1.0f);
 }
 
