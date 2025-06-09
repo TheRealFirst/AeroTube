@@ -54,7 +54,7 @@ void Camera::Inputs(Engine::Timestep ts)
 		return;
 
 	float speed = m_Speed * ts;
-	GLFWwindow* window = static_cast<GLFWwindow*>(Engine::Application::Get().GetWindow().GetWindow()); // TODO: Abstract this!
+	GLFWwindow* window = static_cast<GLFWwindow*>(Engine::Application::Get().GetWindow().GetNativeWindow()); // TODO: Abstract this!
 
 	// Handles mouse inputs
 	if (Engine::Input::IsMouseButtonPressed(Engine::Mouse::Button0))

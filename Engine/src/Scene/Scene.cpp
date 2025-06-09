@@ -5,7 +5,7 @@
 
 Scene::Scene()
 {
-	Renderer::SetupRenderer();
+	Renderer::Init();
 
 	m_Models.emplace_back("Assets/Models/bunny/scene.gltf");
 	m_Shaders.emplace_back("Assets/Shaders/default.vert", "Assets/Shaders/default.frag");

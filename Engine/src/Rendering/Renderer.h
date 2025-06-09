@@ -19,7 +19,7 @@ public:
 		OpenGL = 1
 	};
 public:
-	static void SetupRenderer();
+	static void Init();
 
 	static void Clear(const glm::vec4& color);
 

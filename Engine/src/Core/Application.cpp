@@ -14,10 +14,7 @@ namespace Engine {
 
 		s_Instance = this;
 
-		uint32_t width = 3840;
-		uint32_t height = 2160;
-
-		m_Window = new Window("AeroTube", width, height); // TODO: Application Title
+		m_Window = Window::Create(); // TODO: Application Title
 		m_Window->SetEventCallback(AT_BIND_EVENT_FN(Application::OnEvent));
 
 		m_ImGuiLayer = new ImGuiLayer();
@@ -50,7 +47,7 @@ namespace Engine {
 			for (Layer* layer : m_LayerStack)
 				layer->OnImGuiRender();
 			m_ImGuiLayer->End();
-			m_Window->OnUpdate(timestep);
+			m_Window->OnUpdate();
 		}
 	}
 

@@ -12,7 +12,7 @@
 
 Renderer::API Renderer::s_API = Renderer::API::OpenGL;
 
-void Renderer::SetupRenderer()
+void Renderer::Init()
 {
 	glEnable(GL_DEPTH_TEST);
 

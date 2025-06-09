@@ -32,7 +32,6 @@ group "Dependencies"
 	include "Engine/vendor/GLFW"
 	include "Engine/vendor/glad"
 	include "Engine/vendor/imgui"
-	-- include "Engine/vendor/tinygltf"
 group ""
 
 group "Core"
