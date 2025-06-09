@@ -1,17 +1,20 @@
 #include <Engine.h>
+#include <Core/Entrypoint.h>
 
-class AeroTube : public Engine::Application 
-{
-public:
-	AeroTube() {
-		LOG_INFO("Started up the Engine.")
+#include "AeroTubeLayer.h"
+
+namespace Engine {
+	class AeroTube : public Application
+	{
+	public:
+		AeroTube() : Application() {
+			PushLayer(new AeroTubeLayer());
+		}
+
+		~AeroTube() = default;
+	};
+
+	Application* CreateApplication() {
+		return new AeroTube();
 	}
-
-	~AeroTube() {
-		LOG_INFO("Shutting the Engine down.")
-	}
-};
-
-Engine::Application* Engine::CreateApplication() {
-	return new AeroTube();
 }

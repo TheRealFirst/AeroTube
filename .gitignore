@@ -1,6 +1,8 @@
 # Directories
-bin/
+**/bin/
+!vendor/premake/bin/
 bin-int/
+Intermediates/
 
 # Visual Studio files and folder
 .vs/
@@ -9,3 +11,6 @@ bin-int/
 **.vcxproj.filters
 **.vcxproj.user
 **.csproj
+
+# Engine specific files
+**.log

@@ -1,0 +1,15 @@
+[submodule "Engine/vendor/yaml-cpp"]
+	path = Engine/vendor/yaml-cpp
+	url = https://github.com/TheRealFirst/yaml-cpp
+[submodule "Engine/vendor/glfw"]
+	path = Engine/vendor/glfw
+	url = https://github.com/TheRealFirst/glfw
+[submodule "Engine/vendor/glm"]
+	path = Engine/vendor/glm
+	url = https://github.com/g-truc/glm
+[submodule "Engine/vendor/imgui"]
+	path = Engine/vendor/imgui
+	url = https://github.com/TheRealFirst/imgui
+[submodule "Engine/vendor/tinygltf"]
+	path = Engine/vendor/tinygltf
+	url = https://github.com/TheRealFirst/tinygltf
