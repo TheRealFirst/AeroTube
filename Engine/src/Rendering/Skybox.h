@@ -5,6 +5,8 @@
 
 #include "Camera.h"
 
+#include "Buffers\VertexArray.h"
+
 struct Skybox_Textures 
 {
 	char* right;
@@ -24,7 +26,7 @@ public:
 private:
 	Shader skyboxShader;
 
-	unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
+	VertexArray VAO;
 	unsigned int cubemapTexture;
 };
 

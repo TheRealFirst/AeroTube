@@ -8,7 +8,6 @@
 #include <stb_image.h>
 #include "Model.h"
 #include <glm\glm.hpp>
-#include "glad\glad.h"
 
 
 
@@ -26,12 +25,6 @@ void Model::Draw(Shader& shader, const Camera& camera)
 		
 		m_Meshes[i].Draw(shader, camera);
 		// meshes[i].Draw(shader, camera, matricesMeshes[i]);
-		
-		// Check for errors after each mesh
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR) {
-			LOG_ERROR("OpenGL error after drawing mesh %d: 0x%x", i, err);
-		}
 	}
 }
 

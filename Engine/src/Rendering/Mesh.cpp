@@ -1,8 +1,6 @@
 #include "atpch.h"
 #include "Mesh.h"
-#include "glad/glad.h"
 
-#include "OpenGLContext.h"
 #include "Renderer.h"
 
 
@@ -17,7 +15,6 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 	Mesh::m_Textures = textures;
 
 	m_VertexArray.CreateArrays(Mesh::m_Vertices, Mesh::m_Indices);
-	glCheckError();
 }
 
 void Mesh::Draw(Shader& shader,
@@ -35,12 +32,6 @@ void Mesh::Draw(Shader& shader,
 
 	shader.Activate();
 	m_VertexArray.Bind();
-
-	GLint currentProgram;
-	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-	if (currentProgram != shader.ID) {
-		LOG_ERROR("Shader program mismatch! Expected: %d, Got: %d", shader.ID, currentProgram);
-	}
 
 	int slot = 0;
 	for (const auto& [type, tex] : m_Textures) {
@@ -60,10 +51,8 @@ void Mesh::Draw(Shader& shader,
 	}
 
 	// Take care of the camera Matrix
-	glUniform3f(glGetUniformLocation(shader.ID, "camPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+	camera.PositionUniform(shader, "camPos");
 	camera.MatrixUniform(shader, "camMatrix");
-
-	LOG_DEBUG("Using VAO: %d", m_VertexArray.ID);
 
 	// Initialize matrices
 	glm::mat4 trans = glm::mat4(1.0f);
@@ -76,16 +65,10 @@ void Mesh::Draw(Shader& shader,
 	sca = glm::scale(sca, scale);
 
 	glm::mat4 modelMatrix = matrix * glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, "model"), 1, GL_FALSE, glm::value_ptr(modelMatrix));
-
-	glCheckError();
-	// Draw the actual mesh
-	// glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, (void*)0);
-	glCheckError();
+	shader.SetMat4("model", modelMatrix);
 
 	Renderer::Render(m_Indices.size());
 
-	// glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 	m_VertexArray.Unbind();
 }
 

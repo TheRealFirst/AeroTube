@@ -1,6 +1,6 @@
 #pragma once
 #include "Core.h"
-#include "../Rendering/window.h"
+#include "window.h"
 #include "../Rendering/Renderer.h"
 #include "Layerstack.h"
 #include "../Events/ApplicationEvent.h"

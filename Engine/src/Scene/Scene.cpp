@@ -13,7 +13,8 @@ Scene::Scene()
 	m_Skybox = Skybox();
 	LoadSkyboxTextures();
 
-	Renderer::SetLightColor(m_Shaders[0], m_LightColor);
+	m_Shaders[0].Activate();
+	m_Shaders[0].SetFloat4("lightColor", glm::vec4(m_LightColor, 1));
 }
 
 void Scene::ToggleSkybox(bool toggleSkybox)

@@ -1,8 +1,10 @@
 #pragma once
 #include <stdint.h>
-#include "Renderer.h"
+#include "Rendering/Renderer.h"
 #include "../Core/Timestep.h"
 #include "../Events/Event.h"
+
+#include "../Rendering/GraphicsContext.h"
 
 struct GLFWwindow;
 
@@ -29,6 +31,7 @@ namespace Engine {
 		bool IsVSync() const;
 	private:
 		GLFWwindow* m_Window;
+		Scope<GraphicsContext> m_Context;
 
 		struct WindowData
 		{

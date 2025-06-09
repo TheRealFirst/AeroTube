@@ -1,7 +1,6 @@
 #include "atpch.h"
 #include "window.h"
 #include <GLFW\glfw3.h>
-#include <glad\glad.h>
 
 #include "../Events/ApplicationEvent.h"
 #include "../Events/KeyEvent.h"
@@ -19,20 +18,6 @@ namespace Engine {
 		LOG_ERROR(description);
 	}
 
-    void GLAPIENTRY
-        GLMessageCallback(GLenum source,
-            GLenum type,
-            GLuint id,
-            GLenum severity,
-            GLsizei length,
-            const GLchar* message,
-            const void* userParam)
-    {
-        fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-            (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-            type, severity, message);
-    }
-
 	Window::Window(const std::string& title, uint32_t width, uint32_t height)
 	{
 		m_Data.Title = title;
@@ -47,7 +32,8 @@ namespace Engine {
 		}
 		
         #ifdef AT_DEBUG
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
+        if (Renderer::GetAPI() == Renderer::API::OpenGL)
+            glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
         #endif
 		
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -57,19 +43,14 @@ namespace Engine {
 		m_Window = glfwCreateWindow((int)m_Data.Width, (int)m_Data.Height, m_Data.Title.c_str(), NULL, NULL);
 		++s_GLFWWindowCount;
 
+        m_Context = GraphicsContext::Create(m_Window);
+        m_Context->Init();
+
 		if (m_Window == NULL) {
 			LOG_FATAL("Failed to create GLFW window.");
 			glfwTerminate();
 			AT_ASSERT(false);
 		}
-		glfwMakeContextCurrent(m_Window);
-
-        // Initialize GLAD after creating OpenGL context
-        AT_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to initialize Glad!");
-
-        // During init, enable debug output
-        glEnable(GL_DEBUG_OUTPUT);
-        glDebugMessageCallback(GLMessageCallback, 0);
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
         SetVSync(true);
@@ -179,7 +160,7 @@ namespace Engine {
 	void Window::OnUpdate(Timestep ts) {
 
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+        m_Context->SwapBuffers();
 	}
 
 

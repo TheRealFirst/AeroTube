@@ -4,21 +4,21 @@
 #include "glad/glad.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Renderer.h"
 
-float skyboxVertices[] =
-{
-	//   Coordinates
-	-1.0f, -1.0f,  1.0f,//        7--------6
-	 1.0f, -1.0f,  1.0f,//       /|       /|
-	 1.0f, -1.0f, -1.0f,//      4--------5 |
-	-1.0f, -1.0f, -1.0f,//      | |      | |
-	-1.0f,  1.0f,  1.0f,//      | 3------|-2
-	 1.0f,  1.0f,  1.0f,//      |/       |/
-	 1.0f,  1.0f, -1.0f,//      0--------1
-	-1.0f,  1.0f, -1.0f
+std::vector<Vertex> skyboxVertices = {
+	// position                  // normal            // color            // texUV
+	{{-1.0f,  1.0f, -1.0f}, {0, 1, 0}, {1, 0, 0}, {0, 0}}, // 0
+	{{ 1.0f,  1.0f, -1.0f}, {0, 1, 0}, {0, 1, 0}, {1, 0}}, // 1
+	{{ 1.0f,  1.0f,  1.0f}, {0, 1, 0}, {0, 0, 1}, {1, 1}}, // 2
+	{{-1.0f,  1.0f,  1.0f}, {0, 1, 0}, {1, 1, 0}, {0, 1}}, // 3
+	{{-1.0f, -1.0f, -1.0f}, {0, -1, 0}, {1, 0, 1}, {0, 0}}, // 4
+	{{ 1.0f, -1.0f, -1.0f}, {0, -1, 0}, {0, 1, 1}, {1, 0}}, // 5
+	{{ 1.0f, -1.0f,  1.0f}, {0, -1, 0}, {1, 1, 1}, {1, 1}}, // 6
+	{{-1.0f, -1.0f,  1.0f}, {0, -1, 0}, {0, 0, 0}, {0, 1}}, // 7
 };
 
-unsigned int skyboxIndices[] =
+std::vector<unsigned int> skyboxIndices =
 {
 	// Right
 	1, 2, 6,
@@ -44,22 +44,9 @@ Skybox::Skybox() : skyboxShader("Assets/Shaders/skybox.vert", "Assets/Shaders/sk
 {
 
 	skyboxShader.Activate();
-	glUniform1i(glGetUniformLocation(skyboxShader.ID, "skybox"), 0);
+	skyboxShader.SetInt("skybox", 0);
 
-	// Create VAO, VBO, and EBO for the skybox
-	glGenVertexArrays(1, &skyboxVAO);
-	glGenBuffers(1, &skyboxVBO);
-	glGenBuffers(1, &skyboxEBO);
-	glBindVertexArray(skyboxVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	VAO.CreateArrays(skyboxVertices, skyboxIndices);
 
 
 	glGenTextures(1, &cubemapTexture);
@@ -226,15 +213,15 @@ void Skybox::DrawSkybox(Camera camera)
 	glDepthFunc(GL_LEQUAL);
 
 	skyboxShader.Activate();
-	glUniformMatrix4fv(glGetUniformLocation(skyboxShader.ID, "viewproj"), 1, GL_FALSE, glm::value_ptr(camera.GetViewProjection()));
+	skyboxShader.SetMat4("viewproj", camera.GetViewProjection());
 
 	// Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
 	// where an object is present (a depth of 1.0f will always fail against any object's depth value)
-	glBindVertexArray(skyboxVAO);
+	VAO.Bind();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	Renderer::Render(36);
+	VAO.Bind();
 
 	// Switch back to the normal depth function
 	glDepthFunc(GL_LESS);

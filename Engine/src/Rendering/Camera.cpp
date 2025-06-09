@@ -1,7 +1,6 @@
 #include "atpch.h"
 #include "Camera.h"
 
-#include <glad\glad.h>
 #include <GLFW\glfw3.h>
 
 #include "Core\Input.h"
@@ -40,12 +39,12 @@ void Camera::OnUpdate(Engine::Timestep ts)
 
 void Camera::MatrixUniform(Shader& shader, const char* uniform) const
 {
-	glUniformMatrix4fv(glGetUniformLocation(shader.ID, uniform), 1, GL_FALSE, glm::value_ptr(m_ViewProjection));
+	shader.SetMat4(uniform, m_ViewProjection);
 }
 
 void Camera::PositionUniform(Shader& shader, const char* uniform) const
 {
-	glUniform3fv(glGetUniformLocation(shader.ID, uniform), 1, glm::value_ptr(Position));
+	shader.SetFloat3(uniform, Position);
 }
 
 void Camera::Inputs(Engine::Timestep ts)
@@ -55,7 +54,7 @@ void Camera::Inputs(Engine::Timestep ts)
 		return;
 
 	float speed = m_Speed * ts;
-	GLFWwindow* window = static_cast<GLFWwindow*>(Engine::Application::Get().GetWindow().GetWindow());
+	GLFWwindow* window = static_cast<GLFWwindow*>(Engine::Application::Get().GetWindow().GetWindow()); // TODO: Abstract this!
 
 	// Handles mouse inputs
 	if (Engine::Input::IsMouseButtonPressed(Engine::Mouse::Button0))
