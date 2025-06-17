@@ -6,7 +6,7 @@ class SettingsPanel
 {
 public:
 	SettingsPanel() = default;
-	SettingsPanel(Camera* camera);
+	SettingsPanel(Engine::Ref<Engine::Camera> camera);
 
 	~SettingsPanel() = default;
 
@@ -22,7 +22,7 @@ private:
 
 private:
 	// Camera Settings
-	Camera* m_Camera;
+	Engine::Ref<Engine::Camera> m_Camera;
 	float m_CameraSensitivity = 50.0f;
 	float m_CameraSpeed = 1.0f;
 

@@ -20,7 +20,7 @@ namespace Engine {
 
 		m_Camera = Camera(fbSpec.Width, fbSpec.Height, glm::vec3(0, 0, -2), 45, 0.1f, 1000.0f);
 
-		m_SettingsPanel = SettingsPanel(&m_Camera);
+		m_SettingsPanel = SettingsPanel(CreateRef<Camera>(m_Camera));
 	}
 
 	void AeroTubeLayer::OnDetach()

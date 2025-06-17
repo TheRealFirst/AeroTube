@@ -3,27 +3,29 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 
-typedef unsigned int GLuint;
 typedef signed long long int GLsizeiptr;
-typedef unsigned int GLenum;
 
-class VertexArray
-{
-public:
-	GLuint ID;
-	VertexArray();
-	~VertexArray() = default;
+namespace Engine {
+	class VertexArray
+	{
+	public:
+		
+		VertexArray();
+		~VertexArray() = default;
 
-	void CreateArrays(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+		void CreateArrays(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices);
 
-	void Bind();
-	void Unbind();
+		void Bind();
+		void Unbind();
 
-	void Delete();
+		void Delete();
 
-private:
-	void LinkAttrib(GLuint layout, GLuint numComponents, GLenum type, GLsizeiptr stride, void* offset);
-	VertexBuffer m_VertexBuffer;
-	IndexBuffer m_IndexBuffer;
-};
+		inline uint32_t GetID() { return m_ID; }
+	private:
+		uint32_t m_ID = 0;
 
+		void LinkAttrib(uint32_t layout, uint32_t numComponents, uint32_t type, GLsizeiptr stride, void* offset);
+		VertexBuffer m_VertexBuffer;
+		IndexBuffer m_IndexBuffer;
+	};
+}

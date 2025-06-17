@@ -7,26 +7,27 @@
 
 #include "Buffers\VertexArray.h"
 
-struct Skybox_Textures 
-{
-	char* right;
-	char* left;
-	char* top;
-	char* bottom;
-	char* front;
-	char* back;
-};
+namespace Engine {
+	struct Skybox_Textures
+	{
+		char* right;
+		char* left;
+		char* top;
+		char* bottom;
+		char* front;
+		char* back;
+	};
 
-class Skybox
-{
-public:
-	Skybox();
-	void LoadSkybox(Skybox_Textures* textures);
-	void DrawSkybox(Camera camera);
-private:
-	Shader skyboxShader;
+	class Skybox
+	{
+	public:
+		Skybox();
+		void LoadSkybox(Skybox_Textures* textures);
+		void DrawSkybox(Camera camera);
+	private:
+		Shader m_SkyboxShader;
 
-	VertexArray VAO;
-	unsigned int cubemapTexture;
-};
-
+		VertexArray m_VertexArray;
+		unsigned int m_CubemapTexture;
+	};
+}

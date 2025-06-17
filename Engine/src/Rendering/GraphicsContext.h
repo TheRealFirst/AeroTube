@@ -1,12 +1,15 @@
 #pragma once
 
-class GraphicsContext
-{
-public:
-	virtual ~GraphicsContext() = default;
 
-	virtual void Init() = 0;
-	virtual void SwapBuffers() = 0;
+namespace Engine {
+	class GraphicsContext
+	{
+	public:
+		virtual ~GraphicsContext() = default;
 
-	static Engine::Scope<GraphicsContext> Create(void* window);
-};
+		virtual void Init() = 0;
+		virtual void SwapBuffers() = 0;
+
+		static Scope<GraphicsContext> Create(void* window);
+	};
+}

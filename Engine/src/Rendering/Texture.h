@@ -4,48 +4,42 @@
 #include <string>
 #include "ShaderClass.h"
 
+namespace Engine {
 
-enum class TextureType {
-	Diffuse,
-	Normal,
-	MetallicRoughness,
-	Occlusion,
-	Emissive,
-	Unknown
-};
+	enum class TextureType2D {
+		Diffuse,
+		Normal,
+		MetallicRoughness,
+		Occlusion,
+		Emissive,
+		Unknown
+	};
 
-class Texture
-{
-public:
-	
+	class Texture2D;
 
-	Texture(const char* image, TextureType texType, GLuint slot);
+	class Texture
+	{
+	public:
+		virtual ~Texture() = default;
 
-	// Assigns a texture unit to a texture
-	void texUnit(Shader& shader, const char* uniform, GLuint unit);
-	// Binds a texture
-	void Bind();
-	// Unbinds a texture
-	void Unbind();
-	// Deletes a texture
-	void Delete();
+		virtual uint32_t GetID() const = 0;
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
 
-	inline TextureType GetType() { return m_Type; }
-	inline void SetType(TextureType type) { m_Type = type; }
+		virtual void SetData(void* data, uint32_t size) = 0;
 
-	inline std::string GetPath() { return m_Path; }
-	inline void SetPath(std::string path) { m_Path = path; }
+		virtual void Bind(uint32_t slot = 0) const = 0;
 
-	inline uint32_t GetID() { return m_ID; }
-	inline void SetID(uint32_t ID) { m_ID = ID; }
+		virtual bool operator==(const Texture& other) const = 0;
+	};
 
-	inline uint32_t GetUnit() { return m_Unit; }
-	inline void SetUnit(uint32_t unit) { m_Unit = unit; }
+	class Texture2D : public Texture
+	{
+	public:
+		static Ref<Texture2D> Create(uint32_t width, uint32_t height);
+		static Ref<Texture2D> Create(const std::string& path);
+		static Ref<Texture2D> Create(const std::string& path, TextureType2D type);
 
-private:
-	uint32_t m_ID;
-	uint32_t m_Unit;
-	TextureType m_Type;
-	std::string m_Path;
-};
-
+		virtual TextureType2D GetType() const = 0;
+	};
+}
