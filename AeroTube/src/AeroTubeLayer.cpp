@@ -16,7 +16,7 @@ namespace Engine {
 		fbSpec.Height = 2160;
 		m_Framebuffer = CreateRef<Framebuffer>(fbSpec);
 
-		m_Scene = Scene();
+		m_Scene = CreateRef<Scene>();
 
 		m_Camera = Camera(fbSpec.Width, fbSpec.Height, glm::vec3(0, 0, -2), 45, 0.1f, 1000.0f);
 
@@ -44,7 +44,7 @@ namespace Engine {
 
 		m_Framebuffer->ClearAttachment(1, -1);
 
-		m_Scene.DrawScene(m_Camera);
+		m_Scene->DrawScene(m_Camera);
 
 		m_Framebuffer->Unbind();
 	}

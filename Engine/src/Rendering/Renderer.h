@@ -23,7 +23,7 @@ namespace Engine {
 
 		static void Clear(const glm::vec4& color);
 
-		static void Render(uint32_t size);
+		static void Render(uint32_t indexCount);
 
 		static API GetAPI() { return s_API; }
 	private:

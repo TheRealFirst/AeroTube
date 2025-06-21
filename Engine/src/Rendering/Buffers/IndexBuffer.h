@@ -1,20 +1,16 @@
 #pragma once
 
-#include "vector"
-
 namespace Engine {
 	class IndexBuffer
 	{
 	public:
-		IndexBuffer() = default;
-		IndexBuffer(std::vector<uint32_t>& indices);
+		virtual ~IndexBuffer() {}
+        
+		virtual void Bind() const = 0;
+		virtual void UnBind() const = 0;
 
-		void Bind();
-		void Unbind();
-		void Delete();
+		virtual uint32_t GetCount() const = 0;
 
-		inline uint32_t GetID() { return m_ID; }
-	private:
-		uint32_t m_ID = 0;
+		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
 	};
 }

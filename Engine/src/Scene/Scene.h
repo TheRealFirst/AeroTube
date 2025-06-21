@@ -17,7 +17,7 @@ namespace Engine {
 		void ToggleGrid(bool toggleGrid);
 
 		glm::vec4 GetClearColor();
-		void DrawScene(Camera camera);
+		void DrawScene(const Camera& camera);
 
 	private:
 		bool m_DrawSkybox = false;

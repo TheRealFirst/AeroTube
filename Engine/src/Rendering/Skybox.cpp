@@ -8,7 +8,7 @@
 
 
 namespace Engine {
-	std::vector<Vertex> skyboxVertices = {
+	std::vector<Vertex> SkyboxVertices = {
 		// position                  // normal            // color            // texUV
 		{{-1.0f,  1.0f, -1.0f}, {0, 1, 0}, {1, 0, 0}, {0, 0}}, // 0
 		{{ 1.0f,  1.0f, -1.0f}, {0, 1, 0}, {0, 1, 0}, {1, 0}}, // 1
@@ -19,8 +19,8 @@ namespace Engine {
 		{{ 1.0f, -1.0f,  1.0f}, {0, -1, 0}, {1, 1, 1}, {1, 1}}, // 6
 		{{-1.0f, -1.0f,  1.0f}, {0, -1, 0}, {0, 0, 0}, {0, 1}}, // 7
 	};
-
-	std::vector<unsigned int> skyboxIndices =
+	
+	std::vector<uint32_t> skyboxIndices =
 	{
 		// Right
 		1, 2, 6,
@@ -41,17 +41,30 @@ namespace Engine {
 		3, 7, 6,
 		6, 2, 3
 	};
-
+	
+	
 	Skybox::Skybox() : m_SkyboxShader("Assets/Shaders/skybox.vert", "Assets/Shaders/skybox.frag")
 	{
 
 		m_SkyboxShader.Activate();
 		m_SkyboxShader.SetInt("skybox", 0);
-
+		
 		LOG_DEBUG("Creating Vertex Array in Skybox.cpp");
-		m_VertexArray.CreateArrays(skyboxVertices, skyboxIndices);
+		m_VertexArray = VertexArray::Create();
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(SkyboxVertices.size() * sizeof(Vertex));
+		vertexBuffer->SetLayout({
+			{ShaderDataType::Float3, "aPos"},
+			{ShaderDataType::Float3, "aNormal"},
+			{ShaderDataType::Float3, "aColor"},
+			{ShaderDataType::Float2, "aTex"},
+		});
+		
+		vertexBuffer->SetData(SkyboxVertices.data(), SkyboxVertices.size() * sizeof(Vertex));
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(skyboxIndices.data(), skyboxIndices.size());
+		m_VertexArray->SetIndexBuffer(indexBuffer);
+		
 		glGenTextures(1, &m_CubemapTexture);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -220,11 +233,11 @@ namespace Engine {
 
 		// Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
 		// where an object is present (a depth of 1.0f will always fail against any object's depth value)
-		m_VertexArray.Bind();
+		m_VertexArray->Bind();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
 		Renderer::Render(36);
-		m_VertexArray.Bind();
+		m_VertexArray->UnBind();
 
 		// Switch back to the normal depth function
 		glDepthFunc(GL_LESS);

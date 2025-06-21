@@ -19,7 +19,7 @@ namespace Engine {
             m_Path = modelPath.parent_path().string();
             loadModel(path);
         }
-        void Draw(Shader& shader, const Camera& camera);
+        void Draw(Shader& shader);
     private:
         void loadModel(std::string& path);
         void ProcessNode(int nodeIndex, const glm::mat4& parentTransform);

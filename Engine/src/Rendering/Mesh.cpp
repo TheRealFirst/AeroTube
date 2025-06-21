@@ -5,20 +5,32 @@
 
 
 namespace Engine {
-	Mesh::Mesh(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices, std::unordered_map<TextureType2D, Ref<Texture2D>>& textures)
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::unordered_map<TextureType2D, Ref<Texture2D>>& textures)
 	{
 		LOG_DEBUG("Creating mesh with %d vertices, %d indices, %d textures",
 			vertices.size(), indices.size(), textures.size());
 
-		Mesh::m_Vertices = vertices;
-		Mesh::m_Indices = indices;
-		Mesh::m_Textures = textures;
+		m_Vertices = vertices;
+		m_Indices = indices;
+		m_Textures = textures;
 
-		m_VertexArray.CreateArrays(Mesh::m_Vertices, Mesh::m_Indices);
+		m_VertexArray = VertexArray::Create();
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
+		vertexBuffer->SetLayout({
+			{ShaderDataType::Float3, "aPos"},
+			{ShaderDataType::Float3, "aNormal"},
+			{ShaderDataType::Float3, "aColor"},
+			{ShaderDataType::Float2, "aTex"},
+		});
+		
+		vertexBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
+
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.size());
+		m_VertexArray->SetIndexBuffer(indexBuffer);
 	}
 
 	void Mesh::Draw(Shader& shader,
-		const Camera& camera,
 		glm::mat4 matrix,
 		glm::vec3 translation,
 		glm::quat rotation,
@@ -31,7 +43,7 @@ namespace Engine {
 		}
 
 		shader.Activate();
-		m_VertexArray.Bind();
+		m_VertexArray->Bind();
 
 		int slot = 0;
 		for (const auto& [type, tex] : m_Textures) {
@@ -50,30 +62,15 @@ namespace Engine {
 			++slot;
 		}
 
-		// Take care of the camera Matrix
-		camera.PositionUniform(shader, "camPos");
-		camera.MatrixUniform(shader, "camMatrix");
-
-		// Initialize matrices
-		glm::mat4 trans = glm::mat4(1.0f);
-		glm::mat4 rot = glm::mat4(1.0f);
-		glm::mat4 sca = glm::mat4(1.0f);
-
-		// Transform the matrices to their correct form
-		trans = glm::translate(trans, translation);
-		rot = glm::mat4_cast(rotation);
-		sca = glm::scale(sca, scale);
-
-		glm::mat4 modelMatrix = matrix * glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(glm::mat4(1.0f), scale);
+		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		shader.SetMat4("model", modelMatrix);
 
 		Renderer::Render(m_Indices.size());
 
-		m_VertexArray.Unbind();
+		m_VertexArray->UnBind();
 	}
 
 	void Mesh::Delete()
 	{
-		m_VertexArray.Delete();
 	}
 }

@@ -49,13 +49,15 @@ namespace Engine {
 		return m_ClearColor;
 	}
 
-	void Scene::DrawScene(Camera camera)
+	void Scene::DrawScene(const Camera& camera)
 	{
 		Renderer::Clear(m_ClearColor);
 
 		for (uint32_t i = 0; i < m_Models.size(); i++)
 		{
-			m_Models[i].Draw(m_Shaders[0], camera);
+			camera.MatrixUniform(m_Shaders[0], "camMatrix");
+			camera.PositionUniform(m_Shaders[0], "camPos");
+			m_Models[i].Draw(m_Shaders[0]);
 		}
 
 		if (m_DrawSkybox)

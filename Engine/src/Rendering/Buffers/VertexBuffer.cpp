@@ -2,30 +2,30 @@
 #include"VertexBuffer.h"
 #include <glad\glad.h>
 
+#include "Platform/OpenGL/OpenGLVertexBuffer.h"
+#include "Rendering/Renderer.h"
+
 namespace Engine {
-	// Constructor that generates a Vertex Buffer Object and links it to vertices
-	VertexBuffer::VertexBuffer(std::vector <Vertex>& vertices)
+	Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
-		glGenBuffers(1, &m_ID);
-		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+		switch (Renderer::GetAPI())
+		{
+		case Renderer::API::None: AT_ASSERT(false, "Renderer::API::None: is currently not supported!") return nullptr;
+		case Renderer::API::OpenGL: return CreateRef<OpenGLVertexBuffer>(size);
+		}
+		AT_ASSERT(false, "Unknown RendererAPI!");
+		return  nullptr;
 	}
 
-	// Binds the VBO
-	void VertexBuffer::Bind()
+	Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
 	{
-		glBindBuffer(GL_ARRAY_BUFFER, m_ID);
-	}
+		switch (Renderer::GetAPI())
+		{
+		case Renderer::API::None: AT_ASSERT(false, "Renderer::API::None: is currently not supported!") return nullptr;
+		case Renderer::API::OpenGL: return CreateRef<OpenGLVertexBuffer>(vertices, size);
+		}
 
-	// Unbinds the VBO
-	void VertexBuffer::Unbind()
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	// Deletes the VBO
-	void VertexBuffer::Delete()
-	{
-		glDeleteBuffers(1, &m_ID);
+		AT_ASSERT(false, "Unknown RendererAPI!");
+		return  nullptr;
 	}
 }

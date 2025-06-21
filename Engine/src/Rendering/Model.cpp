@@ -11,7 +11,7 @@
 
 
 namespace Engine {
-	void Model::Draw(Shader& shader, const Camera& camera)
+	void Model::Draw(Shader& shader)
 	{
 		LOG_DEBUG("Drawing m_Model with %d meshes", m_Meshes.size());
 
@@ -23,7 +23,7 @@ namespace Engine {
 
 		for (unsigned int i = 0; i < m_Meshes.size(); i++) {
 
-			m_Meshes[i].Draw(shader, camera);
+			m_Meshes[i].Draw(shader);
 			// meshes[i].Draw(shader, camera, matricesMeshes[i]);
 		}
 	}
@@ -162,6 +162,7 @@ namespace Engine {
 			uvData = reinterpret_cast<const float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
 		}
 
+		vertices.reserve(posAccessor.count);
 		for (size_t i = 0; i < posAccessor.count; ++i) {
 			Vertex v;
 			v.position = glm::vec3(transform * glm::vec4(ReadVec3(posData + i * 3), 1.0f));
@@ -176,6 +177,7 @@ namespace Engine {
 		const auto& idxBuffer = m_Model->buffers.at(idxBufferView.buffer);
 		const unsigned char* idxData = &idxBuffer.data[idxBufferView.byteOffset + idxAccessor.byteOffset];
 
+		indices.reserve(idxAccessor.count);
 		for (size_t i = 0; i < idxAccessor.count; ++i) {
 			if (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
 				indices.push_back(reinterpret_cast<const uint16_t*>(idxData)[i]);

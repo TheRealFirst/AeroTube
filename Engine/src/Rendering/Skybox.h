@@ -27,7 +27,7 @@ namespace Engine {
 	private:
 		Shader m_SkyboxShader;
 
-		VertexArray m_VertexArray;
+		Ref<VertexArray> m_VertexArray;
 		unsigned int m_CubemapTexture;
 	};
 }
