@@ -81,6 +81,11 @@ namespace Engine {
 	void Shader::SetInt(const std::string& name, const int& value)
 	{
 		GLint location = glGetUniformLocation(m_ID, name.c_str());
+		if (location == -1) {
+			LOG_WARN("Uniform %s not found in shader!", name.c_str());
+			return;
+		}
+		LOG_DEBUG("Uniform %s bound to slot %d", name.c_str(), value);
 		glUniform1i(location, value);
 	}
 

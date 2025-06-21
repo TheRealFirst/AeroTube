@@ -8,7 +8,7 @@ namespace Engine {
 	{
 		Renderer::Init(); // TODO: Move out of here
 
-		m_Models.emplace_back("Assets/Models/bunny/scene.gltf");
+		m_Models.emplace_back("C:/Users/TheRe/Downloads/DamagedHelmet/DamagedHelmet.gltf");
 		m_Shaders.emplace_back("Assets/Shaders/default.vert", "Assets/Shaders/default.frag");
 
 		LoadSkyboxTextures();

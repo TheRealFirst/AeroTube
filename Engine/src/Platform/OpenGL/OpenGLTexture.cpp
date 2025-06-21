@@ -117,6 +117,26 @@ namespace Engine {
 		glDeleteTextures(1, &m_ID);
 	}
 
+	std::string OpenGLTexture2D::GetTypeAsUniform() const
+	{
+		switch (m_Type)
+		{
+		case TextureType2D::Diffuse:
+			return "u_DiffuseMap";
+		case TextureType2D::Normal:
+			return "u_NormalMap";
+		case TextureType2D::MetallicRoughness:
+			return "u_MetallicRoughnessMap";
+		case TextureType2D::Occlusion:
+			return "u_OcclusionMap";
+		case TextureType2D::Emissive:
+			return "u_EmissiveMap";
+			default:
+				LOG_ERROR("There is no texture Type unknown");
+				return "Error";
+		}
+	}
+
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)
 	{
 		uint32_t bpp = m_DataFormat == GL_RGBA ? 4 : 3;
@@ -126,6 +146,7 @@ namespace Engine {
 
 	void OpenGLTexture2D::Bind(uint32_t slot) const
 	{
-		glBindTextureUnit(slot, m_ID);
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D, m_ID);
 	}
 }

@@ -11,6 +11,24 @@
 
 
 namespace Engine {
+	struct MaterialKey {
+		std::unordered_map<TextureType2D, std::string> texturePaths;
+		bool operator==(const MaterialKey& other) const {
+			return texturePaths == other.texturePaths;
+		}
+	};
+
+	struct MaterialKeyHash {
+		std::size_t operator()(const MaterialKey& k) const {
+			std::size_t hash = 0;
+			for (const auto& [type, path] : k.texturePaths) {
+				hash ^= std::hash<std::string>()(path) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+			}
+			return hash;
+		}
+	};
+
+	
 	void Model::Draw(Shader& shader)
 	{
 		LOG_DEBUG("Drawing m_Model with %d meshes", m_Meshes.size());
@@ -28,7 +46,7 @@ namespace Engine {
 		}
 	}
 
-	void Model::loadModel(std::string& path)
+	void Model::LoadModel(const std::string& path)
 	{
 		tinygltf::TinyGLTF loader;
 		m_Model = std::make_unique<tinygltf::Model>();
@@ -41,49 +59,55 @@ namespace Engine {
 
 		if (!res) {
 			LOG_ERROR("Failed to load glTF: %s", path.c_str());
+			return;
 		}
-		else
-			LOG_INFO("Loaded glTF:%s", path.c_str());
+		LOG_INFO("Loaded glTF: %s", path.c_str());
 
-		for (const auto& material : m_Model->materials) {
+		m_TextureCache.clear();
+		std::unordered_map<MaterialKey, std::unordered_map<TextureType2D, Ref<Texture2D>>, MaterialKeyHash> materialCache;
+
+		for (const auto& material : m_Model->materials)
+		{
 			std::unordered_map<TextureType2D, Ref<Texture2D>> matTextures;
+			MaterialKey key;
 
 			auto loadTextureFromIndex = [&](int index, TextureType2D texType) {
 				if (index < 0 || index >= m_Model->textures.size()) return;
-
 				const auto& gltfTex = m_Model->textures[index];
 				const auto& image = m_Model->images[gltfTex.source];
 				std::string texPath = image.uri;
 				std::string fullPath = m_Path + "/" + texPath;
+				key.texturePaths[texType] = fullPath;
+			};
 
-				// Check if already loaded (optional cache)
-				auto tex = Texture2D::Create(fullPath, texType);
-				m_LoadedTextures.push_back(tex);
-				matTextures[texType] = tex;
-				};
-
-			// Diffuse/BaseColor
 			if (material.pbrMetallicRoughness.baseColorTexture.index >= 0)
 				loadTextureFromIndex(material.pbrMetallicRoughness.baseColorTexture.index, TextureType2D::Diffuse);
-
-			// Normal Map
 			if (material.normalTexture.index >= 0)
 				loadTextureFromIndex(material.normalTexture.index, TextureType2D::Normal);
-
-			// Metallic-Roughness
 			if (material.pbrMetallicRoughness.metallicRoughnessTexture.index >= 0)
 				loadTextureFromIndex(material.pbrMetallicRoughness.metallicRoughnessTexture.index, TextureType2D::MetallicRoughness);
-
-			// Emissive
 			if (material.emissiveTexture.index >= 0)
 				loadTextureFromIndex(material.emissiveTexture.index, TextureType2D::Emissive);
-
-			// Occlusion
 			if (material.occlusionTexture.index >= 0)
 				loadTextureFromIndex(material.occlusionTexture.index, TextureType2D::Occlusion);
 
-			// Save per-material texture set (you'll associate it with a mesh later)
-			m_MaterialTextures.push_back(matTextures); // add this vector to Model class
+			// Check if this material setup was already cached
+			if (materialCache.count(key)) {
+				m_MaterialTextures.push_back(materialCache[key]);
+				continue;
+			}
+
+			// Load the textures
+			for (const auto& [type, fullPath] : key.texturePaths) {
+				if (!m_TextureCache.count(fullPath)) {
+					auto tex = Texture2D::Create(fullPath, type);
+					m_TextureCache[fullPath] = tex;
+				}
+				matTextures[type] = m_TextureCache[fullPath];
+			}
+
+			m_MaterialTextures.push_back(matTextures);
+			materialCache[key] = matTextures;
 		}
 
 		int sceneIndex = m_Model->defaultScene > -1 ? m_Model->defaultScene : 0;
@@ -116,6 +140,8 @@ namespace Engine {
 
 		glm::mat4 globalTransform = parentTransform * localTransform;
 
+		// LOG_DEBUG((char*)m_Model->meshes.size());
+		
 		if (node.mesh >= 0) {
 			const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
 			for (const auto& primitive : mesh.primitives) {

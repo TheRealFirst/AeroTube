@@ -13,15 +13,15 @@ namespace Engine {
     class Model
     {
     public:
-        Model(std::string path)
+        Model(const std::string& path)
         {
             std::filesystem::path modelPath(path);
             m_Path = modelPath.parent_path().string();
-            loadModel(path);
+            LoadModel(path);
         }
         void Draw(Shader& shader);
     private:
-        void loadModel(std::string& path);
+        void LoadModel(const std::string& path);
         void ProcessNode(int nodeIndex, const glm::mat4& parentTransform);
         void ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform);
 
@@ -36,7 +36,7 @@ namespace Engine {
         std::string m_Path;
 
         std::vector<std::unordered_map<TextureType2D, Ref<Texture2D>>> m_MaterialTextures;
-        std::vector<Ref<Texture2D>> m_LoadedTextures;
+        std::unordered_map<std::string, Ref<Texture2D>> m_TextureCache;
 
         std::vector<glm::mat4> m_MatricesMeshes;
 

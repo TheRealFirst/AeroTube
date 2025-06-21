@@ -19,6 +19,7 @@ namespace Engine {
 		glEnable(GL_DEPTH_TEST);
 
 		// When face culling is enabled, use these settings:
+		glEnable(GL_CULL_FACE); 
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CCW);
 	}

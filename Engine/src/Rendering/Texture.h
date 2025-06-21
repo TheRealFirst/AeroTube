@@ -41,5 +41,6 @@ namespace Engine {
 		static Ref<Texture2D> Create(const std::string& path, TextureType2D type);
 
 		virtual TextureType2D GetType() const = 0;
+		virtual std::string GetTypeAsUniform() const = 0;
 	};
 }

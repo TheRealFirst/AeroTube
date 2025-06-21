@@ -16,6 +16,7 @@ namespace Engine
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual uint32_t GetID() const override { return m_ID; }
 		virtual TextureType2D GetType() const override { return m_Type; }
+		virtual std::string GetTypeAsUniform() const override;
 
 		virtual void SetData(void* data, uint32_t size) override;
 

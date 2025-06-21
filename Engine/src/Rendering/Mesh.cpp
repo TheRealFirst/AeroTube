@@ -47,18 +47,9 @@ namespace Engine {
 
 		int slot = 0;
 		for (const auto& [type, tex] : m_Textures) {
-			std::string uniformName;
-			switch (type) {
-			case TextureType2D::Diffuse: uniformName = "u_DiffuseMap"; break;
-			case TextureType2D::Normal: uniformName = "u_NormalMap"; break;
-			case TextureType2D::MetallicRoughness: uniformName = "u_MetallicRoughnessMap"; break;
-			case TextureType2D::Emissive: uniformName = "u_EmissiveMap"; break;
-			case TextureType2D::Occlusion: uniformName = "u_OcclusionMap"; break;
-			default: continue;
-			}
-
-			shader.SetInt(uniformName, slot);
-			tex->Bind();
+			shader.SetInt(tex->GetTypeAsUniform(), slot);
+			tex->Bind(slot);
+			LOG_DEBUG("%s bound to slot %d", tex->GetTypeAsUniform().c_str(), slot);
 			++slot;
 		}
 
