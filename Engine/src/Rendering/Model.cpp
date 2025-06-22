@@ -181,11 +181,14 @@ namespace Engine {
 		}
 
 		const float* uvData = nullptr;
+		size_t uvStride = 0;
+
 		if (primitive.attributes.count("TEXCOORD_0")) {
-			const auto& uvAccessor = m_Model->accessors.at(primitive.attributes.at("TEXCOORD_0"));
-			const auto& uvBufferView = m_Model->bufferViews.at(uvAccessor.bufferView);
-			const auto& uvBuffer = m_Model->buffers.at(uvBufferView.buffer);
-			uvData = reinterpret_cast<const float*>(&uvBuffer.data[uvBufferView.byteOffset + uvAccessor.byteOffset]);
+			const auto& accessor = m_Model->accessors[primitive.attributes.at("TEXCOORD_0")];
+			const auto& view = m_Model->bufferViews[accessor.bufferView];
+			const auto& buffer = m_Model->buffers[view.buffer];
+			uvData = reinterpret_cast<const float*>(&buffer.data[view.byteOffset + accessor.byteOffset]);
+			uvStride = view.byteStride ? view.byteStride : 2 * sizeof(float);
 		}
 
 		vertices.reserve(posAccessor.count);
@@ -194,7 +197,13 @@ namespace Engine {
 			v.position = glm::vec3(transform * glm::vec4(ReadVec3(posData + i * 3), 1.0f));
 			v.normal = normalData ? glm::normalize(glm::mat3(glm::transpose(glm::inverse(transform))) * ReadVec3(normalData + i * 3)) : glm::vec3(0.0f);
 			v.color = glm::vec3(1.0f);
-			v.texUV = uvData ? ReadVec2(uvData + i * 2) : glm::vec2(0.0f);
+			if (uvData)
+				v.texUV = glm::vec2(*reinterpret_cast<const float*>((const uint8_t*)uvData + i * uvStride),
+									*reinterpret_cast<const float*>((const uint8_t*)uvData + i * uvStride + sizeof(float)));
+			else
+				v.texUV = glm::vec2(0.0f);
+
+			v.texUV = {v.texUV.x, 1 - v.texUV.y};
 			vertices.push_back(v);
 		}
 
