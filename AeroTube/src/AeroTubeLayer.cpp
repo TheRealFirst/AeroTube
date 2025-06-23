@@ -14,7 +14,7 @@ namespace Engine {
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 3840;
 		fbSpec.Height = 2160;
-		m_Framebuffer = CreateRef<Framebuffer>(fbSpec);
+		m_Framebuffer = Framebuffer::Create(fbSpec);
 
 		m_Scene = CreateRef<Scene>();
 
@@ -46,7 +46,7 @@ namespace Engine {
 
 		m_Scene->DrawScene(m_Camera);
 
-		m_Framebuffer->Unbind();
+		m_Framebuffer->UnBind();
 	}
 
 	void AeroTubeLayer::OnImGuiRender()
