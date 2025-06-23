@@ -9,12 +9,12 @@ namespace Engine {
 		Renderer::Init(); // TODO: Move out of here
 
 		m_Models.emplace_back("C:/Users/TheRe/Downloads/DamagedHelmet/DamagedHelmet.gltf");
-		m_Shaders.emplace_back("Assets/Shaders/default.vert", "Assets/Shaders/default.frag");
+		m_Shaders.emplace_back(Shader::Create("Assets/Shaders/default.glsl"));
 
 		LoadSkyboxTextures();
 
-		m_Shaders[0].Activate();
-		m_Shaders[0].SetFloat4("lightColor", glm::vec4(m_LightColor, 1));
+		m_Shaders[0]->Bind();
+		m_Shaders[0]->SetFloat4("lightColor", glm::vec4(m_LightColor, 1));
 	}
 
 	void Scene::ToggleSkybox(bool toggleSkybox)
@@ -55,9 +55,9 @@ namespace Engine {
 
 		for (uint32_t i = 0; i < m_Models.size(); i++)
 		{
-			camera.MatrixUniform(m_Shaders[0], "camMatrix");
-			camera.PositionUniform(m_Shaders[0], "camPos");
-			m_Models[i].Draw(m_Shaders[0]);
+			camera.MatrixUniform(*m_Shaders[0].get(), "camMatrix"); // TODO: Solve this better
+			camera.PositionUniform(*m_Shaders[0].get(), "camPos");
+			m_Models[i].Draw(*m_Shaders[0].get());
 		}
 
 		if (m_DrawSkybox)

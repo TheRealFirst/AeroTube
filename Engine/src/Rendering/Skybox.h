@@ -25,7 +25,7 @@ namespace Engine {
 		void LoadSkybox(Skybox_Textures* textures);
 		void DrawSkybox(Camera camera);
 	private:
-		Shader m_SkyboxShader;
+		Ref<Shader> m_Shader;
 
 		Ref<VertexArray> m_VertexArray;
 		unsigned int m_CubemapTexture;

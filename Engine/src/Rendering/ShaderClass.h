@@ -7,28 +7,42 @@
 #include <glm\glm.hpp>
 
 
-namespace Engine {
-    std::string get_file_contents(const char* filename);
-
-    class Shader {
+namespace Engine
+{
+    class Shader
+    {
     public:
-        Shader(const char* vertexFile, const char* fragmentFile);
+        virtual ~Shader() = default;
 
-        void SetInt(const std::string& name, const int& value);
-        void SetIntArray(const std::string& name, int* values, uint32_t count);
-        void SetFloat(const std::string& name, const float value);
-        void SetFloat2(const std::string& name, const glm::vec2& value);
-        void SetFloat3(const std::string& name, const glm::vec3& value);
-        void SetFloat4(const std::string& name, const glm::vec4& value);
-        void SetMat4(const std::string& name, const glm::mat4& matrix);
+        virtual void Bind() const = 0;
+        virtual void UnBind() const = 0;
 
-        void Activate();
-        void Delete();
+        virtual void SetInt(const std::string& name, const int& value) = 0;
+        virtual void SetIntArray(const std::string& name, int* values, uint32_t count) = 0;
+        virtual void SetFloat(const std::string& name, float value) = 0;
+        virtual void SetFloat2(const std::string& name, const glm::vec2& value) = 0;
+        virtual void SetFloat3(const std::string& name, const glm::vec3& value) = 0;
+        virtual void SetFloat4(const std::string& name, const glm::vec4& value) = 0;
+        virtual void SetMat4(const std::string& name, const glm::mat4& value) = 0;
 
-        inline uint32_t GetID() { return m_ID; }
+        virtual const std::string& GetName() const = 0;
+
+        static Ref<Shader> Create(const std::string& filepath);
+        static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
+    };
+
+    class ShaderLibrary
+    {
+    public:
+        void Add(const Ref<Shader>& shader);
+        void Add(const std::string& name, Ref<Shader>& shader);
+        Ref<Shader> Load(const std::string& filepath);
+        Ref<Shader> Load(const std::string& name, const std::string& filepath);
+
+        Ref<Shader> Get(const std::string& name);
+
+        bool Exists(const std::string& name) const;
     private:
-        void compileErrors(unsigned int shader, const char* type);
-    private:
-        uint32_t m_ID;
+        std::unordered_map<std::string, Ref<Shader>> m_Shaders;
     };
 }

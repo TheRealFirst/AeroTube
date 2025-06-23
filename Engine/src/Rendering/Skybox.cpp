@@ -43,11 +43,11 @@ namespace Engine {
 	};
 	
 	
-	Skybox::Skybox() : m_SkyboxShader("Assets/Shaders/skybox.vert", "Assets/Shaders/skybox.frag")
+	Skybox::Skybox()
 	{
 
-		m_SkyboxShader.Activate();
-		m_SkyboxShader.SetInt("skybox", 0);
+		m_Shader = Shader::Create("Assets/Shaders/skybox.glsl");
+		m_Shader->Bind();
 		
 		LOG_DEBUG("Creating Vertex Array in Skybox.cpp");
 		m_VertexArray = VertexArray::Create();
@@ -228,8 +228,8 @@ namespace Engine {
 	{
 		glDepthFunc(GL_LEQUAL);
 
-		m_SkyboxShader.Activate();
-		m_SkyboxShader.SetMat4("viewproj", camera.GetViewProjection());
+		m_Shader->Bind();
+		m_Shader->SetMat4("viewproj", camera.GetViewProjection());
 
 		// Draws the cubemap as the last object so we can save a bit of performance by discarding all fragments
 		// where an object is present (a depth of 1.0f will always fail against any object's depth value)

@@ -36,13 +36,7 @@ namespace Engine {
 		glm::quat rotation,
 		glm::vec3 scale)
 	{
-
-		if (!shader.GetID()) {
-			LOG_ERROR("Invalid shader program");
-			return;
-		}
-
-		shader.Activate();
+		shader.Bind();
 		m_VertexArray->Bind();
 
 		int slot = 0;

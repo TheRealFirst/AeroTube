@@ -27,6 +27,6 @@ namespace Engine {
 		Skybox m_Skybox;
 
 		std::vector<Model> m_Models;
-		std::vector<Shader> m_Shaders;
+		std::vector<Ref<Shader>> m_Shaders;
 	};
 }
