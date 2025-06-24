@@ -1,7 +1,7 @@
 #pragma once
 #include "Core.h"
-#include "../Rendering/window.h"
-#include "../Rendering/Renderer.h"
+#include "Window.h"
+#include "../Rendering/Renderer3D.h"
 #include "Layerstack.h"
 #include "../Events/ApplicationEvent.h"
 #include "../Events/Event.h"
@@ -46,7 +46,7 @@ namespace Engine {
 
 	private:
 		ImGuiLayer* m_ImGuiLayer;
-		Window* m_Window;
+		Scope<Window> m_Window;
 
 		float m_LastFrameTime = 0.0f;
 

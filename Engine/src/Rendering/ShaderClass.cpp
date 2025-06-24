@@ -2,107 +2,72 @@
 #include "ShaderClass.h"
 #include "glad\glad.h"
 
+#include <glm\gtc/type_ptr.hpp>
 
-// Reads a text file and outputs a string with everything in the text file
-std::string get_file_contents(const char* filename)
-{
-	std::ifstream in(filename, std::ios::binary);
+#include "RendererAPI.h"
+#include "Platform/OpenGL/OpenGLShader.h"
 
-	if (!in) {
-		LOG_ERROR("Couldnt find file!")
-		LOG_ERROR(filename)
-	}
 
-	if (in)
+namespace Engine {
+	Ref<Shader> Shader::Create(const std::string& filepath)
 	{
-		std::string contents;
-		in.seekg(0, std::ios::end);
-		contents.resize(in.tellg());
-		in.seekg(0, std::ios::beg);
-		in.read(&contents[0], contents.size());
-		in.close();
-		return(contents);
-	}
-	throw(errno);
-}
-
-Shader::Shader(const char* vertexFile, const char* fragmentFile)
-{
-	// Read vertexFile and fragmentFile and store the strings
-	std::string vertexCode = get_file_contents(vertexFile);
-	std::string fragmentCode = get_file_contents(fragmentFile);
-
-	// Convert the shader source strings into character arrays
-	const char* vertexSource = vertexCode.c_str();
-	const char* fragmentSource = fragmentCode.c_str();
-
-	// Create Vertex Shader Object and get its reference
-	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	// Attach Vertex Shader source to the Vertex Shader Object
-	glShaderSource(vertexShader, 1, &vertexSource, NULL);
-	// Compile the Vertex Shader into machine code
-	glCompileShader(vertexShader);
-
-	#ifdef AT_DEBUG
-	compileErrors(vertexShader, "VERTEX");
-	#endif
-
-	// Create Fragment Shader Object and get its reference
-	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	// Attach Fragment Shader source to the Fragment Shader Object
-	glShaderSource(fragmentShader, 1, &fragmentSource, NULL);
-	// Compile the Vertex Shader into machine code
-	glCompileShader(fragmentShader);
-
-	#ifdef AT_DEBUG
-	compileErrors(fragmentShader, "FRAGMENT");
-	#endif
-
-	// Create Shader Program Object and get its reference
-	ID = glCreateProgram();
-	// Attach the Vertex and Fragment Shaders to the Shader Program
-	glAttachShader(ID, vertexShader);
-	glAttachShader(ID, fragmentShader);
-	// Wrap-up/Link all the shaders together into the Shader Program
-	glLinkProgram(ID);
-
-	#ifdef AT_DEBUG
-	compileErrors(ID, "PROGRAM");
-	#endif
-
-	// Delete the now useless Vertex and Fragment Shader objects
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-}
-
-void Shader::Activate()
-{
-	glUseProgram(ID);
-}
-
-void Shader::Delete()
-{
-	glDeleteProgram(ID);
-}
-
-void Shader::compileErrors(unsigned int shader, const char* type)
-{
-	GLint hasCompiled;
-	char infoLog[1024];
-	if (type != "PROGRAM") {
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &hasCompiled);
-		if (hasCompiled == GL_FALSE) {
-			glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "SHADER_COMPILATION_ERROR for: " << type << "\n";
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(filepath);
 		}
+
+		AT_ASSERT(false, "Unknown RendererAPI")
+		return nullptr;
 	}
-	else {
-		glGetProgramiv(shader, GL_LINK_STATUS, &hasCompiled);
-		if (hasCompiled == GL_FALSE) {
-			glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-			std::cout << "SHADER_LINKING_ERROR for: " << type << "\n";
-		}
+
+	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);        }
+
+		AT_ASSERT(false, "Unknown RendererAPI")
+		return nullptr;
+	}
+
+	void ShaderLibrary::Add(const Ref<Shader>& shader)
+	{
+		auto& name = shader->GetName();
+		AT_ASSERT(!Exists(name), "Shader already exists!")
+		m_Shaders[name] = shader;
+	}
+
+	void ShaderLibrary::Add(const std::string& name, Ref<Shader>& shader)
+	{
+		AT_ASSERT(!Exists(name), "Shader already exists!")
+		m_Shaders[name] = shader;
+	}
+
+	Ref<Shader> ShaderLibrary::Load(const std::string& filepath)
+	{
+		auto shader = Shader::Create(filepath);
+		Add(shader);
+		return shader;
+	}
+
+	Ref<Shader> ShaderLibrary::Load(const std::string& name, const std::string& filepath)
+	{
+		auto shader = Shader::Create(filepath);
+		Add(name, shader);
+		return shader;
+	}
+
+	Ref<Shader> ShaderLibrary::Get(const std::string& name)
+	{
+		AT_ASSERT(Exists(name), "Shader not found!")
+		return m_Shaders[name];
+	}
+
+	bool ShaderLibrary::Exists(const std::string& name) const
+	{
+		return m_Shaders.find(name) != m_Shaders.end();
 	}
 }
-
 

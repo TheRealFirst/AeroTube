@@ -12,5 +12,7 @@ Intermediates/
 **.vcxproj.user
 **.csproj
 
+**.idea
+
 # Engine specific files
 **.log

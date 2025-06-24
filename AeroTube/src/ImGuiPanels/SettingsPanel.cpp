@@ -2,7 +2,7 @@
 
 #include <ImGui\imgui.h>
 
-SettingsPanel::SettingsPanel(Camera* camera)
+SettingsPanel::SettingsPanel(Engine::Ref<Engine::Camera> camera)
 {
 	m_Camera = camera;
 

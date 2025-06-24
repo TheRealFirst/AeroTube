@@ -44,8 +44,8 @@ namespace Engine {
 
 		SetDarkThemeColors();
 
-		Engine::Application& app = Engine::Application::Get();
-		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetWindow());
+		Application& app = Application::Get();
+		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");

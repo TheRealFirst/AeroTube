@@ -14,13 +14,13 @@ namespace Engine {
 		fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		fbSpec.Width = 3840;
 		fbSpec.Height = 2160;
-		m_Framebuffer = CreateRef<Framebuffer>(fbSpec);
+		m_Framebuffer = Framebuffer::Create(fbSpec);
 
-		m_Scene = Scene();
+		m_Scene = CreateRef<Scene>();
 
 		m_Camera = Camera(fbSpec.Width, fbSpec.Height, glm::vec3(0, 0, -2), 45, 0.1f, 1000.0f);
 
-		m_SettingsPanel = SettingsPanel(&m_Camera);
+		m_SettingsPanel = SettingsPanel(CreateRef<Camera>(m_Camera));
 	}
 
 	void AeroTubeLayer::OnDetach()
@@ -44,9 +44,9 @@ namespace Engine {
 
 		m_Framebuffer->ClearAttachment(1, -1);
 
-		m_Scene.DrawScene(m_Camera);
+		m_Scene->DrawScene(m_Camera);
 
-		m_Framebuffer->Unbind();
+		m_Framebuffer->UnBind();
 	}
 
 	void AeroTubeLayer::OnImGuiRender()

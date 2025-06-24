@@ -19,8 +19,6 @@ project "Engine"
 		"vendor/glm/glm/**.inl",
 		"vendor/json/json.h",
 		"vendor/tinygltf/tiny_gltf.h",
-		-- "vendor/tinygltf/json.hpp",
-		-- "vendor/tinygltf/stb_image.h",
 		"vendor/tinygltf/stb_image_write.h",
 	}
 

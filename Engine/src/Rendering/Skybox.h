@@ -5,26 +5,29 @@
 
 #include "Camera.h"
 
-struct Skybox_Textures 
-{
-	char* right;
-	char* left;
-	char* top;
-	char* bottom;
-	char* front;
-	char* back;
-};
+#include "Buffers\VertexArray.h"
 
-class Skybox
-{
-public:
-	Skybox();
-	void LoadSkybox(Skybox_Textures* textures);
-	void DrawSkybox(Camera camera);
-private:
-	Shader skyboxShader;
+namespace Engine {
+	struct Skybox_Textures
+	{
+		char* right;
+		char* left;
+		char* top;
+		char* bottom;
+		char* front;
+		char* back;
+	};
 
-	unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
-	unsigned int cubemapTexture;
-};
+	class Skybox
+	{
+	public:
+		Skybox();
+		void LoadSkybox(Skybox_Textures* textures);
+		void DrawSkybox(Camera camera);
+	private:
+		Ref<Shader> m_Shader;
 
+		Ref<VertexArray> m_VertexArray;
+		unsigned int m_CubemapTexture;
+	};
+}

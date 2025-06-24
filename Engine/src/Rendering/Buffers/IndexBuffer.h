@@ -1,20 +1,16 @@
 #pragma once
 
+namespace Engine {
+	class IndexBuffer
+	{
+	public:
+		virtual ~IndexBuffer() {}
+        
+		virtual void Bind() const = 0;
+		virtual void UnBind() const = 0;
 
-typedef unsigned int GLuint;
+		virtual uint32_t GetCount() const = 0;
 
-
-#include "vector"
-
-class IndexBuffer
-{
-public:
-	GLuint ID = 0;
-	IndexBuffer() = default;
-	IndexBuffer(std::vector<GLuint>& indices);
-
-	void Bind();
-	void Unbind();
-	void Delete();
-};
-
+		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+	};
+}
