@@ -1,12 +1,13 @@
 #include "atpch.h"
 #include "Scene.h"
 
-#include "Rendering\Renderer.h"
+#include "Rendering/RenderCommand.h"
+#include "Rendering\Renderer3D.h"
 
 namespace Engine {
 	Scene::Scene()
 	{
-		Renderer::Init(); // TODO: Move out of here
+		RenderCommand::Init(); // TODO: Move out of here
 
 		m_Models.emplace_back("C:/Users/TheRe/Downloads/DamagedHelmet/DamagedHelmet.gltf");
 		m_Shaders.emplace_back(Shader::Create("Assets/Shaders/default.glsl"));
@@ -34,24 +35,15 @@ namespace Engine {
 		m_Skybox.LoadSkybox(&SkyboxTextures);
 	}
 
-	void Scene::SetClearColor(glm::vec4 clearColor)
-	{
-		m_ClearColor = clearColor;
-	}
-
 	void Scene::ToggleGrid(bool toggleGrid)
 	{
 		m_ToggleGrid = toggleGrid;
 	}
 
-	glm::vec4 Scene::GetClearColor()
-	{
-		return m_ClearColor;
-	}
-
 	void Scene::DrawScene(const Camera& camera)
 	{
-		Renderer::Clear(m_ClearColor);
+		RenderCommand::Clear();
+		RenderCommand::SetClearColor(m_ClearColor);
 
 		for (uint32_t i = 0; i < m_Models.size(); i++)
 		{

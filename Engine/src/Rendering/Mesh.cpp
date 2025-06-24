@@ -1,7 +1,7 @@
 #include "atpch.h"
 #include "Mesh.h"
 
-#include "Renderer.h"
+#include "RenderCommand.h"
 
 
 namespace Engine {
@@ -50,7 +50,7 @@ namespace Engine {
 		glm::mat4 modelMatrix = glm::mat4(1.0f);
 		shader.SetMat4("model", modelMatrix);
 
-		Renderer::Render(m_Indices.size());
+		RenderCommand::DrawIndexed(m_VertexArray, m_Indices.size());
 
 		m_VertexArray->UnBind();
 	}

@@ -1,10 +1,11 @@
 #include "atpch.h"
 #include "Skybox.h"
+
+#include "RenderCommand.h"
 #include "stb_image.h"
 #include "glad/glad.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
-#include "Renderer.h"
 
 
 namespace Engine {
@@ -236,7 +237,7 @@ namespace Engine {
 		m_VertexArray->Bind();
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_CubemapTexture);
-		Renderer::Render(36);
+		RenderCommand::DrawIndexed(m_VertexArray, 36);
 		m_VertexArray->UnBind();
 
 		// Switch back to the normal depth function

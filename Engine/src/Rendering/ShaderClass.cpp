@@ -4,17 +4,17 @@
 
 #include <glm\gtc/type_ptr.hpp>
 
-#include "Renderer.h"
+#include "RendererAPI.h"
 #include "Platform/OpenGL/OpenGLShader.h"
 
 
 namespace Engine {
 	Ref<Shader> Shader::Create(const std::string& filepath)
 	{
-		switch (Renderer::GetAPI())
+		switch (RendererAPI::GetAPI())
 		{
-		case Renderer::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
-		case Renderer::API::OpenGL: return CreateRef<OpenGLShader>(filepath);
+		case RendererAPI::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(filepath);
 		}
 
 		AT_ASSERT(false, "Unknown RendererAPI")
@@ -23,10 +23,10 @@ namespace Engine {
 
 	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
-		switch (Renderer::GetAPI())
+		switch (RendererAPI::GetAPI())
 		{
-		case Renderer::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
-		case Renderer::API::OpenGL: return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);        }
+		case RendererAPI::API::None: AT_ASSERT(false, "RendererAPI::None is currently not supported!") return nullptr;
+		case RendererAPI::API::OpenGL: return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);        }
 
 		AT_ASSERT(false, "Unknown RendererAPI")
 		return nullptr;

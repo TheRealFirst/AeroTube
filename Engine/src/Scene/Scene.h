@@ -13,10 +13,10 @@ namespace Engine {
 
 		void ToggleSkybox(bool toggleSkybox);
 		void LoadSkyboxTextures();
-		void SetClearColor(glm::vec4 clearColor);
+		void SetClearColor(const glm::vec4 clearColor) {m_ClearColor = clearColor;}
 		void ToggleGrid(bool toggleGrid);
 
-		glm::vec4 GetClearColor();
+		glm::vec4 GetClearColor() {return m_ClearColor;}
 		void DrawScene(const Camera& camera);
 
 	private:
