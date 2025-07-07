@@ -1,8 +1,11 @@
 #include "atpch.h"
 #include "OpenGLTexture.h"
 
+#include <filesystem>
+
 #include "stb_image.h"
 #include "glad/glad.h"
+#include "Utils/PlatformUtils.h"
 
 namespace Engine {
 	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height) : m_Width(width), m_Height(height), m_Type(TextureType2D::Diffuse)
@@ -135,6 +138,25 @@ namespace Engine {
 				LOG_ERROR("There is no texture Type unknown");
 				return "Error";
 		}
+	}
+
+	void OpenGLTexture2D::MoveLocation(std::string newLocation)
+	{
+		std::filesystem::path sourceFile = m_Path;
+		std::filesystem::path targetParent = newLocation;
+		auto target = targetParent / sourceFile.filename(); // sourceFile.filename() returns "sourceFile.ext".
+
+		try // If you want to avoid exception handling, then use the error code overload of the following functions.
+		{
+			std::filesystem::create_directories(targetParent); // Recursively create target directory if not existing.
+			std::filesystem::copy_file(sourceFile, target, std::filesystem::copy_options::overwrite_existing);
+		}
+		catch (std::exception& e) // Not using fs::filesystem_error since std::bad_alloc can throw too.  
+		{
+			LOG_ERROR(e.what());
+		}
+
+		m_Path = target.string();
 	}
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)

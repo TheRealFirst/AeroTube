@@ -1,0 +1,5 @@
+Model: DamagedHelmet
+Meshes:
+  - DamagedHelmet0.atmesh
+Materials:
+  - DamagedHelmet0.atmat

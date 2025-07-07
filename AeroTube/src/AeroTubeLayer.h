@@ -1,5 +1,7 @@
 #pragma once
 #include <Engine.h>
+
+#include "ImGuiPanels/ModelImporterPanel.h"
 #include "ImGuiPanels\SettingsPanel.h"
 
 namespace Engine {
@@ -19,6 +21,9 @@ namespace Engine {
         bool OnKeyPressed(KeyPressedEvent& e);
         bool OnMouseButtonPressed(MouseButtonPressedEvent& e);
 
+		void ImportModel();
+		void ShowEditorSettings();
+		
         void CloseApplication();
 
     private:
@@ -33,5 +38,6 @@ namespace Engine {
         Ref<Scene> m_Scene;
 
         SettingsPanel m_SettingsPanel;
+	    ModelImporterPanel m_ModelImporterPanel;
 	};
 }

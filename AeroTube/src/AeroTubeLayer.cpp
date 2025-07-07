@@ -1,7 +1,10 @@
 #include "AeroTubeLayer.h"
 
+#include <optional>
 #include <imgui/imgui.h>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "Utils/PlatformUtils.h"
 
 namespace Engine {
 	AeroTubeLayer::AeroTubeLayer() : Layer("AeroTube")
@@ -140,6 +143,19 @@ namespace Engine {
 				ImGui::EndMenu();
 			}
 
+			if(ImGui::BeginMenu("Window"))
+			{
+				if(ImGui::MenuItem("Import Model"))
+				{
+					ImportModel();
+				}
+
+				if (ImGui::MenuItem("Editor Settings"))
+				{
+					ShowEditorSettings();
+				}
+				ImGui::EndMenu();
+			}
 
 			ImGui::EndMenuBar();
 		}
@@ -151,6 +167,8 @@ namespace Engine {
 		ImGui::End();
 
 		m_SettingsPanel.OnImGuiRender();
+
+		m_ModelImporterPanel.OnImGuiRender();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
@@ -239,6 +257,20 @@ namespace Engine {
 	bool AeroTubeLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
 	{
 		return false;
+	}
+
+	void AeroTubeLayer::ImportModel()
+	{
+		std::optional<std::string> filepath = FileDialogs::OpenFile("GLTF Model (*.gltf)\0*.gltf\0");
+		if (filepath)
+		{
+			m_ModelImporterPanel.StartImportProcess(*filepath);
+		}
+	}
+
+	void AeroTubeLayer::ShowEditorSettings()
+	{
+		m_SettingsPanel.Show();
 	}
 
 	void AeroTubeLayer::CloseApplication()

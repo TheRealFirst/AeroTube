@@ -5,14 +5,11 @@
 
 
 namespace Engine {
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::unordered_map<TextureType2D, Ref<Texture2D>>& textures)
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const Ref<Material> material)
 	{
-		LOG_DEBUG("Creating mesh with %d vertices, %d indices, %d textures",
-			vertices.size(), indices.size(), textures.size());
-
 		m_Vertices = vertices;
 		m_Indices = indices;
-		m_Textures = textures;
+		m_Material = material;
 
 		m_VertexArray = VertexArray::Create();
 		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
@@ -30,28 +27,14 @@ namespace Engine {
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 	}
 
-	void Mesh::Draw(Shader& shader,
-		glm::mat4 matrix,
+	void Mesh::Draw(glm::mat4 matrix,
 		glm::vec3 translation,
 		glm::quat rotation,
 		glm::vec3 scale)
 	{
-		shader.Bind();
 		m_VertexArray->Bind();
-
-		int slot = 0;
-		for (const auto& [type, tex] : m_Textures) {
-			shader.SetInt(tex->GetTypeAsUniform(), slot);
-			tex->Bind(slot);
-			LOG_DEBUG("%s bound to slot %d", tex->GetTypeAsUniform().c_str(), slot);
-			++slot;
-		}
-
-		glm::mat4 modelMatrix = glm::mat4(1.0f);
-		shader.SetMat4("model", modelMatrix);
-
+		m_Material->GetShader()->SetMat4("model", matrix);
 		RenderCommand::DrawIndexed(m_VertexArray, m_Indices.size());
-
 		m_VertexArray->UnBind();
 	}
 

@@ -18,7 +18,6 @@
 
 #include "ImGui\ImGuiLayer.h"
 
-
 // ---- Logging -----------------
 #include "Logging\Log.h"
 

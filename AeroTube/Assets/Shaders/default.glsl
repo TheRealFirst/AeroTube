@@ -63,6 +63,14 @@ uniform sampler2D u_NormalMap;
 uniform sampler2D u_MetallicRoughnessMap;
 uniform sampler2D u_OcclusionMap;
 uniform sampler2D u_EmissiveMap;
+
+// PBR Values
+uniform vec4 Albedo;
+uniform float Metallic;
+uniform float Roughness;
+uniform float Occlusion;
+uniform float Emission;
+
 // Gets the color of the light from the main function
 uniform vec4 lightColor;
 // Gets the position of the light from the main function
@@ -153,6 +161,6 @@ void main()
 {
 	// outputs final color
 	vec4 dummy = texture(u_NormalMap, texCoord) * texture(u_MetallicRoughnessMap, texCoord) * texture(u_MetallicRoughnessMap, texCoord) * texture(u_OcclusionMap, texCoord) * texture(u_EmissiveMap, texCoord); // forces inclusion
-	// FragColor = texture(u_DiffuseMap, texCoord);
+	// FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	FragColor = direcLight();
 }

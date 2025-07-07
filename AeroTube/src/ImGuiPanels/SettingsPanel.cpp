@@ -17,33 +17,35 @@ SettingsPanel::SettingsPanel(Engine::Ref<Engine::Camera> camera)
 
 void SettingsPanel::OnImGuiRender()
 {
-	ImGui::Begin("Settings");
+	if (m_IsShowing) {
+		ImGui::Begin("Settings", &m_IsShowing);
 
 
-	// Show save confirmation message
-	if (m_ShowSaveMessage)
-	{
-		ImGui::SameLine();
-		ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Settings saved!");
-
-		// Decrease timer
-		m_SaveMessageTimer -= ImGui::GetIO().DeltaTime;
-		if (m_SaveMessageTimer <= 0.0f)
+		// Show save confirmation message
+		if (m_ShowSaveMessage)
 		{
-			m_ShowSaveMessage = false;
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "Settings saved!");
+
+			// Decrease timer
+			m_SaveMessageTimer -= ImGui::GetIO().DeltaTime;
+			if (m_SaveMessageTimer <= 0.0f)
+			{
+				m_ShowSaveMessage = false;
+			}
 		}
+
+		if (ImGui::CollapsingHeader("Camera Settings"))
+		{
+			ImGui::SeparatorText("Sensitivity: ");
+			DrawCameraSensitivityUI();
+
+			ImGui::SeparatorText("Speed: ");
+			DrawCameraSpeedUI();
+		}
+
+		ImGui::End();
 	}
-
-	if (ImGui::CollapsingHeader("Camera Settings"))
-	{
-		ImGui::SeparatorText("Sensitivity: ");
-		DrawCameraSensitivityUI();
-
-		ImGui::SeparatorText("Speed: ");
-		DrawCameraSpeedUI();
-	}
-
-	ImGui::End();
 }
 
 void SettingsPanel::SaveSettings()

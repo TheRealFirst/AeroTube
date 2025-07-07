@@ -1,0 +1,14 @@
+Name: DamagedHelmet0
+Shader: default.glsl
+Textures:
+  Albedo: C:/dev/AeroTube/AeroTube/Assets/Exported Models/DamagedHelmet/Textures/Default_albedo.jpg
+  Normal: C:/dev/AeroTube/AeroTube/Assets/Exported Models/DamagedHelmet/Textures/Default_normal.jpg
+  MetallicRoughness: C:/dev/AeroTube/AeroTube/Assets/Exported Models/DamagedHelmet/Textures/Default_metalRoughness.jpg
+  Occlusion: C:/dev/AeroTube/AeroTube/Assets/Exported Models/DamagedHelmet/Textures/Default_AO.jpg
+  Emissive: C:/dev/AeroTube/AeroTube/Assets/Exported Models/DamagedHelmet/Textures/Default_emissive.jpg
+Values:
+  Albedo: [1, 1, 1, 1]
+  Metallic: 1
+  Roughness: 1
+  Occlusion: 1
+  Emission: 1.73205078

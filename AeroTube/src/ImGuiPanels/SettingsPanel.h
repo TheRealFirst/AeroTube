@@ -8,6 +8,8 @@ public:
 	SettingsPanel() = default;
 	SettingsPanel(Engine::Ref<Engine::Camera> camera);
 
+	void Show() { m_IsShowing = true; }
+
 	~SettingsPanel() = default;
 
 	void OnImGuiRender();
@@ -21,6 +23,8 @@ private:
 	void DrawCameraSpeedUI();
 
 private:
+	bool m_IsShowing;
+
 	// Camera Settings
 	Engine::Ref<Engine::Camera> m_Camera;
 	float m_CameraSensitivity = 50.0f;

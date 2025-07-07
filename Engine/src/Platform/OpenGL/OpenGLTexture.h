@@ -18,6 +18,9 @@ namespace Engine
 		virtual TextureType2D GetType() const override { return m_Type; }
 		virtual std::string GetTypeAsUniform() const override;
 
+		virtual std::string GetPath() const override {return m_Path;}
+		virtual void MoveLocation(std::string newLocation) override;
+
 		virtual void SetData(void* data, uint32_t size) override;
 
 		virtual void Bind(uint32_t slot = 0) const override;

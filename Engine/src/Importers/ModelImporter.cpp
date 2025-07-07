@@ -1,16 +1,16 @@
-#include "atpch.h"
+﻿#include "atpch.h"
+#include "ModelImporter.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define TINYGLTF_NO_INCLUDE_STB_IMAGE 
-#define TINYGLTF_NO_INCLUDE_JSON  
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <json.h>
-#include <stb_image.h>
-#include "Model.h"
-#include <glm\glm.hpp>
+#include <filesystem>
 
+#include "imgui.h"
+#include "glm/gtc/type_ptr.hpp"
+#include "yaml-cpp/yaml.h"
 
-namespace Engine {
+#include "Utils/YamlHelpers.h"
+
+namespace Engine
+{
 	struct MaterialKey {
 		std::unordered_map<TextureType2D, std::string> texturePaths;
 		bool operator==(const MaterialKey& other) const {
@@ -27,53 +27,29 @@ namespace Engine {
 			return hash;
 		}
 	};
-
 	
-	void Model::Draw(const Camera& camera)
-	{
-		// LOG_DEBUG("Drawing m_Model with %d meshes", m_Meshes.size());
-		
-		// Check if we have any meshes to draw
-		if (m_Meshes.empty()) {
-			LOG_WARN("m_Model has no meshes to draw!");
-			return;
-		}
+    void ModelImporter::LoadModel(const std::string& filepath)
+    {
+        std::filesystem::path modelPath(filepath);
+        m_Path = modelPath.parent_path().string();
+        m_Name = modelPath.stem().string();
+    	
+        tinygltf::TinyGLTF loader;
+        m_Model = std::make_unique<tinygltf::Model>();
+        std::string err;
+        std::string warn;
 
-		for (auto& material : m_Materials)
-		{
-			material->Bind();
-			camera.MatrixUniform(*material->GetShader().get(), "camMatrix");
-			camera.PositionUniform(*material->GetShader().get(), "camPos");
-			for (auto& mesh : m_Meshes)
-			{
-				if (mesh.GetMaterial() == material)
-				{
-					mesh.Draw();
-				}
-			}
-			material->UnBind();
-		}
-		
-	}
+        bool res = loader.LoadASCIIFromFile(m_Model.get(), &err, &warn, filepath);
+        if (!warn.empty()) LOG_WARN("GLTF Warning: %s", warn.c_str());
+        if (!err.empty()) LOG_ERROR("GLTF Error: %s", err.c_str());
 
-	void Model::LoadModel(const std::string& path)
-	{
-		tinygltf::TinyGLTF loader;
-		m_Model = std::make_unique<tinygltf::Model>();
-		std::string err;
-		std::string warn;
+        if (!res) {
+            LOG_ERROR("Failed to load glTF: %s", filepath.c_str());
+            return;
+        }
+        LOG_INFO("Loaded glTF: %s", filepath.c_str());
 
-		bool res = loader.LoadASCIIFromFile(m_Model.get(), &err, &warn, path);
-		if (!warn.empty()) LOG_WARN("GLTF Warning: %s", warn.c_str());
-		if (!err.empty()) LOG_ERROR("GLTF Error: %s", err.c_str());
-
-		if (!res) {
-			LOG_ERROR("Failed to load glTF: %s", path.c_str());
-			return;
-		}
-		LOG_INFO("Loaded glTF: %s", path.c_str());
-
-		m_TextureCache.clear();
+        m_TextureCache.clear();
 		std::unordered_map<MaterialKey, Ref<Material>, MaterialKeyHash> materialCache;
 
 		for (const auto& material : m_Model->materials)
@@ -94,7 +70,10 @@ namespace Engine {
 				}
 
 				if (!m_TextureCache.count(fullPath))
+				{
 					m_TextureCache[fullPath] = Texture2D::Create(fullPath, type);
+				}
+				
 				target = m_TextureCache[fullPath];
 			};
 
@@ -123,51 +102,139 @@ namespace Engine {
 			ProcessNode(nodeIndex, glm::mat4(1.0f));  // Identity for root
 		}
 
-		
-	}
+    	LOG_DEBUG("Meshes: %d, Materials %d", m_Meshes.size(), m_Materials.size())
+    }
 
-	void Model::ProcessNode(int nodeIndex, const glm::mat4& parentTransform)
-	{
-		const tinygltf::Node& node = m_Model->nodes[nodeIndex];
+	void ModelImporter::SaveModel(const std::string& filepath, const std::optional<std::string>& name)
+    {
+    	if (!name->empty())
+    		m_Name = name.value();
 
-		glm::mat4 localTransform = glm::mat4(1.0f);
+    	LOG_DEBUG(m_Name.c_str());
 
-		if (node.matrix.size() == 16) {
-			localTransform = glm::make_mat4(node.matrix.data());
-		}
-		else {
-			if (node.translation.size() == 3)
-				localTransform = glm::translate(localTransform, glm::vec3(
+    	std::filesystem::path workingPath = filepath;
+    	workingPath /= m_Name;
+    	std::string workingDir = workingPath.string();
+    	LOG_INFO(workingDir.c_str());
+
+    	if (!std::filesystem::create_directory(workingPath))
+    	{
+    		LOG_ERROR("Couldn't create the folder %s", workingPath.string().c_str());
+    		return;
+    	}
+
+    	std::string newModelPath = workingDir + "/" + m_Name + ".atmod";
+
+    	YAML::Emitter out;
+    	out << YAML::BeginMap;
+    	out << YAML::Key << "Model" << YAML::Value << m_Name;
+    	out << YAML::Key << "Meshes" << YAML::Value << YAML::BeginSeq;
+
+    	for (const auto& mesh : m_Meshes)
+    	{
+    		std::string meshFilename = mesh.name + ".atmesh";
+    		out << meshFilename;
+
+    		YAML::Emitter meshOut;
+    		meshOut << YAML::BeginMap;
+    		meshOut << YAML::Key << "Name"         << YAML::Value << mesh.name;
+    		meshOut << YAML::Key << "VertexCount"  << YAML::Value << static_cast<uint32_t>(mesh.vertices.size());
+    		meshOut << YAML::Key << "IndexCount"   << YAML::Value << static_cast<uint32_t>(mesh.indices.size());
+    		meshOut << YAML::Key << "Material"     << YAML::Value 
+					<< (mesh.material ? mesh.material->GetName() + ".atmat" : "None");
+
+    		meshOut << YAML::Key << "Vertices" << YAML::Value << YAML::BeginSeq;
+    		for (const auto& v : mesh.vertices)
+    			meshOut << v; // uses operator<< for Vertex
+    		meshOut << YAML::EndSeq;
+
+    		meshOut << YAML::Key << "Indices" << YAML::Value << YAML::BeginSeq;
+    		for (auto index : mesh.indices)
+    			meshOut << index;
+    		meshOut << YAML::EndSeq;
+
+    		meshOut << YAML::EndMap;
+    		
+    		std::ofstream meshFile(workingDir + "/" + meshFilename);
+    		if (!meshFile.is_open())
+    		{
+    			LOG_ERROR("Failed to write mesh file: %s", meshFilename.c_str());
+    			continue;
+    		}
+    		meshFile << meshOut.c_str();
+    		meshFile.close();
+    	}
+
+    	out << YAML::EndSeq;
+
+    	
+    	out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq;
+
+	    for (const auto& material : m_Materials)
+	    {
+		    material->SaveMaterial(workingDir);
+	    	out << material->GetName() + ".atmat";
+	    }
+
+    	out << YAML::EndSeq;
+    	out << YAML::EndMap;
+
+    	std::ofstream fout(newModelPath);
+    	if (!fout.is_open())
+    	{
+    		LOG_ERROR("Failed to open file for writing: %s", newModelPath.c_str());
+    		return;
+    	}
+    	fout << out.c_str();
+
+    	LOG_DEBUG("Finished exporting the Model");
+    }
+
+    void ModelImporter::ProcessNode(int nodeIndex, const glm::mat4& parentTransform)
+    {
+    	const tinygltf::Node& node = m_Model->nodes[nodeIndex];
+
+    	glm::mat4 localTransform = glm::mat4(1.0f);
+
+    	if (node.matrix.size() == 16) {
+    		localTransform = glm::make_mat4(node.matrix.data());
+    	}
+    	else {
+    		if (node.translation.size() == 3)
+    			localTransform = glm::translate(localTransform, glm::vec3(
 					node.translation[0], node.translation[1], node.translation[2]));
-			if (node.rotation.size() == 4)
-				localTransform *= glm::mat4_cast(glm::quat(
+    		if (node.rotation.size() == 4)
+    			localTransform *= glm::mat4_cast(glm::quat(
 					node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2])); // WXYZ
-			if (node.scale.size() == 3)
-				localTransform = glm::scale(localTransform, glm::vec3(
+    		if (node.scale.size() == 3)
+    			localTransform = glm::scale(localTransform, glm::vec3(
 					node.scale[0], node.scale[1], node.scale[2]));
-		}
+    	}
 
-		glm::mat4 globalTransform = parentTransform * localTransform;
+    	glm::mat4 globalTransform = parentTransform * localTransform;
 
-		// LOG_DEBUG((char*)m_Model->meshes.size());
-		
-		if (node.mesh >= 0) {
-			const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
-			for (const auto& primitive : mesh.primitives) {
-				if (primitive.mode == TINYGLTF_MODE_TRIANGLES) {
-					ProcessPrimitive(primitive, globalTransform, primitive.material);
-				}
-			}
-		}
+    	// LOG_DEBUG((char*)m_Model->meshes.size());
 
-		for (int childIndex : node.children) {
-			ProcessNode(childIndex, globalTransform);
-		}
-	}
+    	uint32_t index = 0;
+    	if (node.mesh >= 0) {
+    		const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
+    		for (const auto& primitive : mesh.primitives) {
+    			if (primitive.mode == TINYGLTF_MODE_TRIANGLES) {
+    				ProcessPrimitive(primitive, globalTransform, primitive.material, index);
+    				index++;
+    			}
+    		}
+    	}
 
-	void Model::ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform, int materialIndex)
-	{
-		LOG_DEBUG("Process Primitive")
+    	for (int childIndex : node.children) {
+    		ProcessNode(childIndex, globalTransform);
+    	}
+    }
+
+    void ModelImporter::ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform,
+	    int materialIndex, uint32_t index)
+    {
+    	LOG_DEBUG("Process Primitive")
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 
@@ -226,14 +293,17 @@ namespace Engine {
 
 		LOG_DEBUG("Primitive material index: %d (m_Materials size: %d)", materialIndex, m_Materials.size());
 		Ref<Material> mat = materialIndex >= 0 && materialIndex < m_Materials.size() ? m_Materials[materialIndex] : nullptr;
-		m_Meshes.emplace_back(vertices, indices, mat);
-	}
+    	
+		m_Meshes.emplace_back(ImporterMesh{vertices, indices, m_Name + std::to_string(index), mat});
+    }
 
-	glm::vec3 Model::ReadVec3(const float* data) {
-		return glm::vec3(data[0], data[1], data[2]);
-	}
+    glm::vec3 ModelImporter::ReadVec3(const float* data)
+    {
+    	return glm::vec3(data[0], data[1], data[2]);
+    }
 
-	glm::vec2 Model::ReadVec2(const float* data) {
-		return glm::vec2(data[0], data[1]);
-	}
+    glm::vec2 ModelImporter::ReadVec2(const float* data)
+    {
+    	return glm::vec2(data[0], data[1]);
+    }
 }
