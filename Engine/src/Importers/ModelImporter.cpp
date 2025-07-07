@@ -1,7 +1,14 @@
 ﻿#include "atpch.h"
-#include "ModelImporter.h"
 
 #include <filesystem>
+
+#define TINYGLTF_IMPLEMENTATION
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE 
+#define TINYGLTF_NO_INCLUDE_JSON  
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <json.h>
+#include <stb_image.h>
+#include "ModelImporter.h"
 
 #include "imgui.h"
 #include "glm/gtc/type_ptr.hpp"

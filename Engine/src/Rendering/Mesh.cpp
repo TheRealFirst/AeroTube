@@ -5,14 +5,12 @@
 
 
 namespace Engine {
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const Ref<Material> material)
+	Mesh::Mesh(const MeshAttributes& attributes)
 	{
-		m_Vertices = vertices;
-		m_Indices = indices;
-		m_Material = material;
+		m_Attributes = attributes;
 
 		m_VertexArray = VertexArray::Create();
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_Vertices.size() * sizeof(Vertex));
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(m_Attributes.Vertices.size() * sizeof(Vertex));
 		vertexBuffer->SetLayout({
 			{ShaderDataType::Float3, "aPos"},
 			{ShaderDataType::Float3, "aNormal"},
@@ -20,10 +18,10 @@ namespace Engine {
 			{ShaderDataType::Float2, "aTex"},
 		});
 		
-		vertexBuffer->SetData(m_Vertices.data(), m_Vertices.size() * sizeof(Vertex));
+		vertexBuffer->SetData(m_Attributes.Vertices.data(), m_Attributes.Vertices.size() * sizeof(Vertex));
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Indices.data(), m_Indices.size());
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(m_Attributes.Indices.data(), m_Attributes.Indices.size());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 	}
 
@@ -33,8 +31,8 @@ namespace Engine {
 		glm::vec3 scale)
 	{
 		m_VertexArray->Bind();
-		m_Material->GetShader()->SetMat4("model", matrix);
-		RenderCommand::DrawIndexed(m_VertexArray, m_Indices.size());
+		m_Attributes.Material->GetShader()->SetMat4("model", matrix);
+		RenderCommand::DrawIndexed(m_VertexArray, m_Attributes.Indices.size());
 		m_VertexArray->UnBind();
 	}
 

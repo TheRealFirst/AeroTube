@@ -8,9 +8,18 @@
 #include "Texture.h"
 
 namespace Engine {
+    struct MeshAttributes
+    {
+        std::string Name;
+        
+        std::vector<Vertex> Vertices;
+        std::vector<uint32_t> Indices;
+        Ref<Material> Material;
+    };
+    
     class Mesh {
     public:
-        Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const Ref<Material> material);
+        Mesh(const MeshAttributes& attributes);
         // Draws the mesh
         void Draw
         (
@@ -22,12 +31,10 @@ namespace Engine {
         void Delete();
 
         
-        Ref<Material> GetMaterial() const { return m_Material; }
+        Ref<Material> GetMaterial() const { return m_Attributes.Material; }
     private:
         // mesh data
-        std::vector<Vertex> m_Vertices;
-        std::vector<uint32_t> m_Indices;
-        Ref<Material> m_Material;
+        MeshAttributes m_Attributes;
 
 
         // render data

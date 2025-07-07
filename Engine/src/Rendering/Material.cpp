@@ -13,7 +13,7 @@ namespace Engine
         m_MaterialProbs.Shader->SetFloat4("lightColor", glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
-    void Material::Material(const std::string& filepath)
+    Material::Material(const std::string& filepath)
     {
         YAML::Node data = YAML::LoadFile(filepath);
 
@@ -37,17 +37,17 @@ namespace Engine
         YAML::Node textures = data["Textures"];
         if (textures)
         {
-            auto loadTex = [](const YAML::Node& node) -> Ref<Texture2D>
+            auto loadTex = [](const YAML::Node& node, TextureType2D type) -> Ref<Texture2D> // TODO: Load Relative Path
             {
                 std::string path = node.as<std::string>("");
-                return path.empty() ? nullptr : CreateRef<Texture2D>(path);
+                return path.empty() ? nullptr : Texture2D::Create(path, type);
             };
 
-            m_MaterialProbs.AlbedoTexture            = loadTex(textures["Albedo"]);
-            m_MaterialProbs.NormalTexture            = loadTex(textures["Normal"]);
-            m_MaterialProbs.MetallicRoughnessTexture = loadTex(textures["MetallicRoughness"]);
-            m_MaterialProbs.OcclusionTexture         = loadTex(textures["Occlusion"]);
-            m_MaterialProbs.EmissiveTexture          = loadTex(textures["Emissive"]);
+            m_MaterialProbs.AlbedoTexture            = loadTex(textures["Albedo"], TextureType2D::Diffuse);
+            m_MaterialProbs.NormalTexture            = loadTex(textures["Normal"], TextureType2D::Normal);
+            m_MaterialProbs.MetallicRoughnessTexture = loadTex(textures["MetallicRoughness"], TextureType2D::MetallicRoughness);
+            m_MaterialProbs.OcclusionTexture         = loadTex(textures["Occlusion"], TextureType2D::Occlusion);
+            m_MaterialProbs.EmissiveTexture          = loadTex(textures["Emissive"], TextureType2D::Emissive);
         }
 
         YAML::Node values = data["Values"];
@@ -73,7 +73,7 @@ namespace Engine
 
         std::string texturePath = filepath + "/Textures";
 
-        auto moveAndNormalize = [&](Ref<Texture2D>& tex) -> std::string
+        auto moveAndNormalize = [&](Ref<Texture2D>& tex) -> std::string //TODO: Only store relative path
         {
             if (!tex) return "";
             tex->MoveLocation(texturePath);

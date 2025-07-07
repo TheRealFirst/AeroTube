@@ -1,34 +1,12 @@
 #include "atpch.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define TINYGLTF_NO_INCLUDE_STB_IMAGE 
-#define TINYGLTF_NO_INCLUDE_JSON  
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <json.h>
-#include <stb_image.h>
 #include "Model.h"
-#include <glm\glm.hpp>
+
+#include "Utils/YamlHelpers.h"
+#include "yaml-cpp/yaml.h"
 
 
 namespace Engine {
-	struct MaterialKey {
-		std::unordered_map<TextureType2D, std::string> texturePaths;
-		bool operator==(const MaterialKey& other) const {
-			return texturePaths == other.texturePaths;
-		}
-	};
-
-	struct MaterialKeyHash {
-		std::size_t operator()(const MaterialKey& k) const {
-			std::size_t hash = 0;
-			for (const auto& [type, path] : k.texturePaths) {
-				hash ^= std::hash<std::string>()(path) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-			}
-			return hash;
-		}
-	};
-
-	
 	void Model::Draw(const Camera& camera)
 	{
 		// LOG_DEBUG("Drawing m_Model with %d meshes", m_Meshes.size());
@@ -56,184 +34,109 @@ namespace Engine {
 		
 	}
 
-	void Model::LoadModel(const std::string& path)
+	void Model::LoadModel()
 	{
-		tinygltf::TinyGLTF loader;
-		m_Model = std::make_unique<tinygltf::Model>();
-		std::string err;
-		std::string warn;
-
-		bool res = loader.LoadASCIIFromFile(m_Model.get(), &err, &warn, path);
-		if (!warn.empty()) LOG_WARN("GLTF Warning: %s", warn.c_str());
-		if (!err.empty()) LOG_ERROR("GLTF Error: %s", err.c_str());
-
-		if (!res) {
-			LOG_ERROR("Failed to load glTF: %s", path.c_str());
+		YAML::Node data = YAML::LoadFile(m_FullPath);
+		if (!data["Model"] || !data["Meshes"] || !data["Materials"])
+		{
+			LOG_ERROR("Invalid or corrupt model file: %s", m_FullPath.c_str());
 			return;
 		}
-		LOG_INFO("Loaded glTF: %s", path.c_str());
 
-		m_TextureCache.clear();
-		std::unordered_map<MaterialKey, Ref<Material>, MaterialKeyHash> materialCache;
+		m_Name = data["Model"].as<std::string>();
+		m_Meshes.clear();
+		m_Materials.clear();
 
-		for (const auto& material : m_Model->materials)
+		std::filesystem::path modelDir = std::filesystem::path(m_ParentPath);
+
+		// Load materials
+		for (const auto& matEntry : data["Materials"])
 		{
-			MaterialProbs probs;
-			probs.Shader = Shader::Create("Assets/Shaders/default.glsl");
+			std::string matFilename = matEntry.as<std::string>();
+			std::filesystem::path matPath = modelDir / matFilename;
 
-			MaterialKey key;
-			auto loadTexture = [&](int index, TextureType2D type, Ref<Texture2D>& target) {
-				if (index < 0 || index >= m_Model->textures.size()) return;
-				const auto& tex = m_Model->textures[index];
-				const auto& image = m_Model->images[tex.source];
-				std::string fullPath = m_Path + "/" + image.uri;
-				key.texturePaths[type] = fullPath;
-
-				if (!std::filesystem::exists(fullPath)) {
-					LOG_WARN("Texture file not found: %s", fullPath.c_str());
-				}
-
-				if (!m_TextureCache.count(fullPath))
-					m_TextureCache[fullPath] = Texture2D::Create(fullPath, type);
-				target = m_TextureCache[fullPath];
-			};
-
-			loadTexture(material.pbrMetallicRoughness.baseColorTexture.index, TextureType2D::Diffuse, probs.AlbedoTexture);
-			loadTexture(material.normalTexture.index, TextureType2D::Normal, probs.NormalTexture);
-			loadTexture(material.pbrMetallicRoughness.metallicRoughnessTexture.index, TextureType2D::MetallicRoughness, probs.MetallicRoughnessTexture);
-			loadTexture(material.occlusionTexture.index, TextureType2D::Occlusion, probs.OcclusionTexture);
-			loadTexture(material.emissiveTexture.index, TextureType2D::Emissive, probs.EmissiveTexture);
-
-			probs.Albedo = glm::make_vec4(material.pbrMetallicRoughness.baseColorFactor.data());
-			probs.Metallic = static_cast<float>(material.pbrMetallicRoughness.metallicFactor);
-			probs.Roughness = static_cast<float>(material.pbrMetallicRoughness.roughnessFactor);
-			probs.Occlusion = material.occlusionTexture.strength;
-			probs.Emission = material.emissiveFactor.empty() ? 0.0f : glm::length(glm::make_vec3(material.emissiveFactor.data()));
-
-			if (!materialCache.count(key)) {
-				materialCache[key] = CreateRef<Material>(probs, m_Name + std::to_string(materialCache.size()));
+			if (!std::filesystem::exists(matPath))
+			{
+				LOG_WARN("Material file not found: %s", matPath.string().c_str());
+				continue;
 			}
 
-			m_Materials.push_back(materialCache[key]);
-		}
-		
-		int sceneIndex = m_Model->defaultScene > -1 ? m_Model->defaultScene : 0;
-		const auto& scene = m_Model->scenes[sceneIndex];
-		for (int nodeIndex : scene.nodes) {
-			ProcessNode(nodeIndex, glm::mat4(1.0f));  // Identity for root
+			Ref<Material> material = CreateRef<Material>(matPath.string());
+			m_Materials.push_back(material);
 		}
 
-		
-	}
+		LOG_DEBUG("Loaded all the Materials")
 
-	void Model::ProcessNode(int nodeIndex, const glm::mat4& parentTransform)
-	{
-		const tinygltf::Node& node = m_Model->nodes[nodeIndex];
+		// Load meshes
+		for (const auto& meshEntry : data["Meshes"])
+		{
+			std::string meshFilename = meshEntry.as<std::string>();
+			std::filesystem::path meshPath = modelDir / meshFilename;
 
-		glm::mat4 localTransform = glm::mat4(1.0f);
-
-		if (node.matrix.size() == 16) {
-			localTransform = glm::make_mat4(node.matrix.data());
-		}
-		else {
-			if (node.translation.size() == 3)
-				localTransform = glm::translate(localTransform, glm::vec3(
-					node.translation[0], node.translation[1], node.translation[2]));
-			if (node.rotation.size() == 4)
-				localTransform *= glm::mat4_cast(glm::quat(
-					node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2])); // WXYZ
-			if (node.scale.size() == 3)
-				localTransform = glm::scale(localTransform, glm::vec3(
-					node.scale[0], node.scale[1], node.scale[2]));
-		}
-
-		glm::mat4 globalTransform = parentTransform * localTransform;
-
-		// LOG_DEBUG((char*)m_Model->meshes.size());
-		
-		if (node.mesh >= 0) {
-			const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
-			for (const auto& primitive : mesh.primitives) {
-				if (primitive.mode == TINYGLTF_MODE_TRIANGLES) {
-					ProcessPrimitive(primitive, globalTransform, primitive.material);
-				}
+			if (!std::filesystem::exists(meshPath))
+			{
+				LOG_WARN("Mesh file not found: %s", meshPath.string().c_str());
+				continue;
 			}
+
+			
+			LOG_DEBUG("Started Loading mesh file")
+			std::ifstream in(meshPath);
+			std::stringstream buffer;
+			buffer << in.rdbuf();
+			std::string content = buffer.str();
+			LOG_DEBUG("Loaded File into memory")
+			auto start = std::chrono::high_resolution_clock::now();
+			YAML::Node meshData = YAML::Load(content);
+			auto end = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+			LOG_DEBUG("YAML parsing took %s ms", std::to_string(duration).c_str());
+			LOG_DEBUG("Ended Loading mesh file")
+			
+			
+			
+			
+			if (!meshData["Name"] || !meshData["Vertices"] || !meshData["Indices"])
+			{
+				LOG_WARN("Invalid mesh file: %s", meshPath.string().c_str());
+				continue;
+			}
+
+			MeshAttributes attributes;
+			attributes.Name = meshData["Name"].as<std::string>();
+
+			LOG_DEBUG("Created Attributes")
+
+			for (const auto& v : meshData["Vertices"])
+				attributes.Vertices.push_back(v.as<Vertex>());
+
+			LOG_DEBUG("Loaded vertices")
+
+			for (const auto& i : meshData["Indices"])
+				attributes.Indices.push_back(i.as<uint32_t>());
+
+			LOG_DEBUG("Loaded indices")
+
+			std::string materialName = meshData["Material"] ? meshData["Material"].as<std::string>() : "None";
+
+			if (materialName != "None")
+			{
+				auto it = std::find_if(m_Materials.begin(), m_Materials.end(), [&](const Ref<Material>& m) {
+					return m->GetName() + ".atmat" == materialName;
+				});
+
+				if (it != m_Materials.end())
+					attributes.Material = *it;
+				else
+					LOG_WARN("No matching material found for mesh %s: %s", attributes.Name.c_str(), materialName.c_str());
+			}
+
+			LOG_DEBUG("Assigned Material")
+
+			m_Meshes.emplace_back(attributes);
+			LOG_DEBUG("Created Mesh")
 		}
 
-		for (int childIndex : node.children) {
-			ProcessNode(childIndex, globalTransform);
-		}
-	}
-
-	void Model::ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform, int materialIndex)
-	{
-		LOG_DEBUG("Process Primitive")
-		std::vector<Vertex> vertices;
-		std::vector<uint32_t> indices;
-
-		const auto& posAccessor = m_Model->accessors.at(primitive.attributes.at("POSITION"));
-		const auto& posBufferView = m_Model->bufferViews.at(posAccessor.bufferView);
-		const auto& posBuffer = m_Model->buffers.at(posBufferView.buffer);
-		const float* posData = reinterpret_cast<const float*>(&posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset]);
-
-		const float* normalData = nullptr;
-		if (primitive.attributes.count("NORMAL")) {
-			const auto& normAccessor = m_Model->accessors.at(primitive.attributes.at("NORMAL"));
-			const auto& normBufferView = m_Model->bufferViews.at(normAccessor.bufferView);
-			const auto& normBuffer = m_Model->buffers.at(normBufferView.buffer);
-			normalData = reinterpret_cast<const float*>(&normBuffer.data[normBufferView.byteOffset + normAccessor.byteOffset]);
-		}
-
-		const float* uvData = nullptr;
-		size_t uvStride = 0;
-		if (primitive.attributes.count("TEXCOORD_0")) {
-			const auto& accessor = m_Model->accessors[primitive.attributes.at("TEXCOORD_0")];
-			const auto& view = m_Model->bufferViews[accessor.bufferView];
-			const auto& buffer = m_Model->buffers[view.buffer];
-			uvData = reinterpret_cast<const float*>(&buffer.data[view.byteOffset + accessor.byteOffset]);
-			uvStride = view.byteStride ? view.byteStride : 2 * sizeof(float);
-		}
-
-		vertices.reserve(posAccessor.count);
-		for (size_t i = 0; i < posAccessor.count; ++i) {
-			Vertex v;
-			v.position = glm::vec3(transform * glm::vec4(ReadVec3(posData + i * 3), 1.0f));
-			v.normal = normalData ? glm::normalize(glm::mat3(glm::transpose(glm::inverse(transform))) * ReadVec3(normalData + i * 3)) : glm::vec3(0.0f);
-			v.color = glm::vec3(1.0f);
-			if (uvData)
-				v.texUV = glm::vec2(*reinterpret_cast<const float*>((const uint8_t*)uvData + i * uvStride), *reinterpret_cast<const float*>((const uint8_t*)uvData + i * uvStride + sizeof(float)));
-			else
-				v.texUV = glm::vec2(0.0f);
-
-			v.texUV = {v.texUV.x, 1 - v.texUV.y};
-			vertices.push_back(v);
-		}
-
-		const auto& idxAccessor = m_Model->accessors.at(primitive.indices);
-		const auto& idxBufferView = m_Model->bufferViews.at(idxAccessor.bufferView);
-		const auto& idxBuffer = m_Model->buffers.at(idxBufferView.buffer);
-		const unsigned char* idxData = &idxBuffer.data[idxBufferView.byteOffset + idxAccessor.byteOffset];
-
-		indices.reserve(idxAccessor.count);
-		for (size_t i = 0; i < idxAccessor.count; ++i) {
-			if (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT)
-				indices.push_back(reinterpret_cast<const uint16_t*>(idxData)[i]);
-			else if (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
-				indices.push_back(reinterpret_cast<const uint32_t*>(idxData)[i]);
-			else if (idxAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE)
-				indices.push_back(reinterpret_cast<const uint8_t*>(idxData)[i]);
-		}
-
-		LOG_DEBUG("Primitive material index: %d (m_Materials size: %d)", materialIndex, m_Materials.size());
-		Ref<Material> mat = materialIndex >= 0 && materialIndex < m_Materials.size() ? m_Materials[materialIndex] : nullptr;
-		m_Meshes.emplace_back(vertices, indices, mat);
-	}
-
-	glm::vec3 Model::ReadVec3(const float* data) {
-		return glm::vec3(data[0], data[1], data[2]);
-	}
-
-	glm::vec2 Model::ReadVec2(const float* data) {
-		return glm::vec2(data[0], data[1]);
+		LOG_DEBUG("Successfully loaded model: %s", m_Name.c_str());
 	}
 }
