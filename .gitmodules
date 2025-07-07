@@ -13,3 +13,6 @@
 [submodule "Engine/vendor/tinygltf"]
 	path = Engine/vendor/tinygltf
 	url = https://github.com/TheRealFirst/tinygltf
+[submodule "Engine/vendor/flatbuffers"]
+	path = Engine/vendor/flatbuffers
+	url = https://github.com/TheRealFirst/flatbuffers
