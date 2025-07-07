@@ -6,6 +6,7 @@
 #include "yaml-cpp/yaml.h"
 
 
+
 namespace Engine {
 	void Model::Draw(const Camera& camera)
 	{

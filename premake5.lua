@@ -24,6 +24,7 @@ IncludeDir["stb_image"] = "%{wks.location}/Engine/vendor/stb_image"
 IncludeDir["json"] = "%{wks.location}/Engine/vendor/json"
 IncludeDir["ImGui"] = "%{wks.location}/Engine/vendor/imgui"
 IncludeDir["tinygltf"] = "%{wks.location}/Engine/vendor/tinygltf"
+IncludeDir["flatbuffers"] = "%{wks.location}/Engine/vendor/flatbuffers/include"
 
 
 group "Dependencies"
@@ -32,6 +33,7 @@ group "Dependencies"
 	include "Engine/vendor/GLFW"
 	include "Engine/vendor/glad"
 	include "Engine/vendor/imgui"
+	include "Engine/vendor/flatbuffers"
 group ""
 
 group "Core"

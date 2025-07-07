@@ -20,7 +20,8 @@ project "Engine"
 		"vendor/json/json.h",
 		"vendor/tinygltf/tiny_gltf.h",
 		"vendor/tinygltf/stb_image_write.h",
-	}
+		"assets/schemas/**.fbs",
+    }
 
 	defines{
 		"_CRT_SECURE_NO_WARNINGS",
@@ -38,6 +39,8 @@ project "Engine"
 		"%{IncludeDir.glm}",
 		"%{IncludeDir.json}",
 		"%{IncludeDir.tinygltf}",
+		"%{IncludeDir.flatbuffers}",
+		"generated",
 	}
 	
 
@@ -47,10 +50,10 @@ project "Engine"
 		"glad",
 		"ImGui",
 		"opengl32.lib",
+		"flatbuffers"
 		-- "tinygltf.lib",
 	}
 
-	
 
 	filter "system:windows"
 		systemversion "latest"

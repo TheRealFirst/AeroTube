@@ -1,0 +1,29 @@
+namespace Engine;
+
+struct Vec3 {
+  x: float;
+  y: float;
+  z: float;
+}
+
+struct Vec2 {
+  u: float;
+  v: float;
+}
+
+struct Vertex {
+  position: Vec3;
+  normal: Vec3;
+  color: Vec3;
+  texcoord: Vec2;
+}
+
+table Mesh {
+  name: string;
+  vertices: [Vertex];
+  indices: [uint32];
+  material: string;
+}
+
+root_type Mesh;
+file_identifier "ATMS"; 
