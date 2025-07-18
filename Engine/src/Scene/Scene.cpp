@@ -9,8 +9,9 @@ namespace Engine {
 	{
 		RenderCommand::Init(); // TODO: Move out of here
 
-		m_Models.emplace_back("Assets/Exported Models/DamagedHelmet/DamagedHelmet.atmod");
-		// m_Models.emplace_back("C:/Users/TheRe/Downloads/main_sponza/main_sponza/NewSponza_Main_glTF_003.gltf");
+		// m_Models.emplace_back("Assets/Exported Models/DamagedHelmet/DamagedHelmet.atmod");
+		// m_Models.emplace_back("Assets/Exported Models/Bunny/Bunny.atmod");
+		m_Models.emplace_back("Assets/Exported Models/Sponza/Sponza.atmod");
 
 		LoadSkyboxTextures();
 	}

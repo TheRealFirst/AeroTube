@@ -3,6 +3,7 @@
 !vendor/premake/bin/
 bin-int/
 Intermediates/
+AeroTube/Assets/Exported Models/
 
 # Visual Studio files and folder
 .vs/

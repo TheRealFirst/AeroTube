@@ -1,4 +1,4 @@
-namespace Engine;
+namespace FBMesh;
 
 struct Vec3 {
   x: float;

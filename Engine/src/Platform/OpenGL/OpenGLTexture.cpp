@@ -144,19 +144,33 @@ namespace Engine {
 	{
 		std::filesystem::path sourceFile = m_Path;
 		std::filesystem::path targetParent = newLocation;
-		auto target = targetParent / sourceFile.filename(); // sourceFile.filename() returns "sourceFile.ext".
+		std::filesystem::path target = targetParent / sourceFile.filename();
 
-		try // If you want to avoid exception handling, then use the error code overload of the following functions.
+		try
 		{
-			std::filesystem::create_directories(targetParent); // Recursively create target directory if not existing.
+			// Check if the source exists before doing anything
+			if (!std::filesystem::exists(sourceFile))
+			{
+				LOG_ERROR("Source texture not found: %s", sourceFile.string().c_str());
+				return;
+			}
+
+			// Skip copying if already equivalent
+			if (std::filesystem::exists(target) &&
+				std::filesystem::equivalent(sourceFile, target))
+			{
+				LOG_DEBUG("Skipping move: already in correct location (%s)", sourceFile.string().c_str());
+				return;
+			}
+
+			std::filesystem::create_directories(targetParent);
 			std::filesystem::copy_file(sourceFile, target, std::filesystem::copy_options::overwrite_existing);
+			m_Path = target.string(); // Update texture path only after successful copy
 		}
-		catch (std::exception& e) // Not using fs::filesystem_error since std::bad_alloc can throw too.  
+		catch (const std::exception& e)
 		{
-			LOG_ERROR(e.what());
+			LOG_ERROR("Failed to move texture: %s", e.what());
 		}
-
-		m_Path = target.string();
 	}
 
 	void OpenGLTexture2D::SetData(void* data, uint32_t size)

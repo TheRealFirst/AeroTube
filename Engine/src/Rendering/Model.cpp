@@ -5,7 +5,7 @@
 #include "Utils/YamlHelpers.h"
 #include "yaml-cpp/yaml.h"
 
-
+#include "mesh_generated.h"
 
 namespace Engine {
 	void Model::Draw(const Camera& camera)
@@ -69,74 +69,89 @@ namespace Engine {
 		LOG_DEBUG("Loaded all the Materials")
 
 		// Load meshes
-		for (const auto& meshEntry : data["Meshes"])
+		#include "mesh_generated.h" // Generated FlatBuffer header
+
+// ...
+
+	for (const auto& meshEntry : data["Meshes"])
+	{
+		std::string meshFilename = meshEntry.as<std::string>();
+		std::filesystem::path meshPath = modelDir / meshFilename;
+
+		if (!std::filesystem::exists(meshPath))
 		{
-			std::string meshFilename = meshEntry.as<std::string>();
-			std::filesystem::path meshPath = modelDir / meshFilename;
-
-			if (!std::filesystem::exists(meshPath))
-			{
-				LOG_WARN("Mesh file not found: %s", meshPath.string().c_str());
-				continue;
-			}
-
-			
-			LOG_DEBUG("Started Loading mesh file")
-			std::ifstream in(meshPath);
-			std::stringstream buffer;
-			buffer << in.rdbuf();
-			std::string content = buffer.str();
-			LOG_DEBUG("Loaded File into memory")
-			auto start = std::chrono::high_resolution_clock::now();
-			YAML::Node meshData = YAML::Load(content);
-			auto end = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-			LOG_DEBUG("YAML parsing took %s ms", std::to_string(duration).c_str());
-			LOG_DEBUG("Ended Loading mesh file")
-			
-			
-			
-			
-			if (!meshData["Name"] || !meshData["Vertices"] || !meshData["Indices"])
-			{
-				LOG_WARN("Invalid mesh file: %s", meshPath.string().c_str());
-				continue;
-			}
-
-			MeshAttributes attributes;
-			attributes.Name = meshData["Name"].as<std::string>();
-
-			LOG_DEBUG("Created Attributes")
-
-			for (const auto& v : meshData["Vertices"])
-				attributes.Vertices.push_back(v.as<Vertex>());
-
-			LOG_DEBUG("Loaded vertices")
-
-			for (const auto& i : meshData["Indices"])
-				attributes.Indices.push_back(i.as<uint32_t>());
-
-			LOG_DEBUG("Loaded indices")
-
-			std::string materialName = meshData["Material"] ? meshData["Material"].as<std::string>() : "None";
-
-			if (materialName != "None")
-			{
-				auto it = std::find_if(m_Materials.begin(), m_Materials.end(), [&](const Ref<Material>& m) {
-					return m->GetName() + ".atmat" == materialName;
-				});
-
-				if (it != m_Materials.end())
-					attributes.Material = *it;
-				else
-					LOG_WARN("No matching material found for mesh %s: %s", attributes.Name.c_str(), materialName.c_str());
-			}
-
-			LOG_DEBUG("Assigned Material")
-
-			m_Meshes.emplace_back(attributes);
-			LOG_DEBUG("Created Mesh")
+			LOG_WARN("Mesh file not found: %s", meshPath.string().c_str());
+			continue;
 		}
+
+		// Load binary file into memory
+		std::ifstream file(meshPath, std::ios::binary | std::ios::ate);
+		if (!file.is_open())
+		{
+			LOG_ERROR("Failed to open mesh file: %s", meshPath.string().c_str());
+			continue;
+		}
+
+		std::streamsize size = file.tellg();
+		file.seekg(0, std::ios::beg);
+
+		std::vector<char> buffer(size);
+		if (!file.read(buffer.data(), size))
+		{
+			LOG_ERROR("Failed to read mesh file: %s", meshPath.string().c_str());
+			continue;
+		}
+
+		// Verify buffer
+		flatbuffers::Verifier verifier(reinterpret_cast<const uint8_t*>(buffer.data()), size);
+		if (!verifier.VerifyBuffer<FBMesh::Mesh>(nullptr))
+		{
+			LOG_ERROR("Invalid FlatBuffer mesh: %s", meshPath.string().c_str());
+			continue;
+		}
+
+		const FBMesh::Mesh* meshFB = FBMesh::GetMesh(buffer.data());
+
+		// Fill MeshAttributes
+		MeshAttributes attributes;
+		attributes.Name = meshFB->name()->str();
+
+		// Load vertices
+		auto fbVerts = meshFB->vertices();
+		attributes.Vertices.reserve(fbVerts->size());
+		for (const auto& v : *fbVerts)
+		{
+			Engine::Vertex vertex;
+			vertex.position = { v->position().x(), v->position().y(), v->position().z() };
+			vertex.normal   = { v->normal().x(),   v->normal().y(),   v->normal().z() };
+			vertex.color    = { v->color().x(),    v->color().y(),    v->color().z() };
+			vertex.texUV    = { v->texcoord().u(), v->texcoord().v() };
+			attributes.Vertices.push_back(vertex);
+		}
+
+		// Load indices
+		auto fbIndices = meshFB->indices();
+		attributes.Indices.assign(fbIndices->begin(), fbIndices->end());
+
+		// Link material
+		std::string matName = meshFB->material()->str() + ".atmat";
+		auto it = std::find_if(m_Materials.begin(), m_Materials.end(), [&](const Ref<Material>& m) {
+			return m->GetName() + ".atmat" == matName;
+		});
+		if (it != m_Materials.end())
+		{
+			attributes.Material = *it;
+		}
+		else
+		{
+			LOG_WARN("No matching material found for mesh %s: %s", attributes.Name.c_str(), matName.c_str());
+		}
+
+		// Construct Mesh and store
+
+		LOG_DEBUG("loaded mesh %s", attributes.Name.c_str())
+		m_Meshes.emplace_back(attributes);
+	}
 
 		LOG_DEBUG("Successfully loaded model: %s", m_Name.c_str());
 	}

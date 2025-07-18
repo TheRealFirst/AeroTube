@@ -10,14 +10,20 @@
 #include <stb_image.h>
 #include "ModelImporter.h"
 
+#include <flatbuffers/flexbuffers.h>
+
 #include "imgui.h"
 #include "glm/gtc/type_ptr.hpp"
 #include "yaml-cpp/yaml.h"
 
 #include "Utils/YamlHelpers.h"
 
+#include "mesh_generated.h"
+
 namespace Engine
 {
+	flatbuffers::FlatBufferBuilder builder(1024);
+	
 	struct MaterialKey {
 		std::unordered_map<TextureType2D, std::string> texturePaths;
 		bool operator==(const MaterialKey& other) const {
@@ -59,7 +65,7 @@ namespace Engine
         m_TextureCache.clear();
 		std::unordered_map<MaterialKey, Ref<Material>, MaterialKeyHash> materialCache;
 
-		for (const auto& material : m_Model->materials)
+		for (const auto& material : m_Model->materials) //  TODO: For the model importer it shouldnt load the textures
 		{
 			MaterialProbs probs;
 			probs.Shader = Shader::Create("Assets/Shaders/default.glsl");
@@ -102,11 +108,12 @@ namespace Engine
 
 			m_Materials.push_back(materialCache[key]);
 		}
-		
-		int sceneIndex = m_Model->defaultScene > -1 ? m_Model->defaultScene : 0;
+    	
+		uint32_t index = 0;
+    	int sceneIndex = m_Model->defaultScene > -1 ? m_Model->defaultScene : 0;
 		const auto& scene = m_Model->scenes[sceneIndex];
 		for (int nodeIndex : scene.nodes) {
-			ProcessNode(nodeIndex, glm::mat4(1.0f));  // Identity for root
+			ProcessNode(nodeIndex, glm::mat4(1.0f), index);  // Identity for root
 		}
 
     	LOG_DEBUG("Meshes: %d, Materials %d", m_Meshes.size(), m_Materials.size())
@@ -139,37 +146,35 @@ namespace Engine
 
     	for (const auto& mesh : m_Meshes)
     	{
+    		builder.Clear();
+    		
     		std::string meshFilename = mesh.name + ".atmesh";
     		out << meshFilename;
 
-    		YAML::Emitter meshOut;
-    		meshOut << YAML::BeginMap;
-    		meshOut << YAML::Key << "Name"         << YAML::Value << mesh.name;
-    		meshOut << YAML::Key << "VertexCount"  << YAML::Value << static_cast<uint32_t>(mesh.vertices.size());
-    		meshOut << YAML::Key << "IndexCount"   << YAML::Value << static_cast<uint32_t>(mesh.indices.size());
-    		meshOut << YAML::Key << "Material"     << YAML::Value 
-					<< (mesh.material ? mesh.material->GetName() + ".atmat" : "None");
-
-    		meshOut << YAML::Key << "Vertices" << YAML::Value << YAML::BeginSeq;
-    		for (const auto& v : mesh.vertices)
-    			meshOut << v; // uses operator<< for Vertex
-    		meshOut << YAML::EndSeq;
-
-    		meshOut << YAML::Key << "Indices" << YAML::Value << YAML::BeginSeq;
-    		for (auto index : mesh.indices)
-    			meshOut << index;
-    		meshOut << YAML::EndSeq;
-
-    		meshOut << YAML::EndMap;
+    		std::vector<FBMesh::Vertex> flatbufferVerts;
+    		flatbufferVerts.reserve(mesh.vertices.size());
     		
-    		std::ofstream meshFile(workingDir + "/" + meshFilename);
-    		if (!meshFile.is_open())
-    		{
-    			LOG_ERROR("Failed to write mesh file: %s", meshFilename.c_str());
-    			continue;
+    		for (const auto& v : mesh.vertices) {
+    			flatbufferVerts.push_back(FBMesh::Vertex{
+					FBMesh::Vec3{v.position.x, v.position.y, v.position.z},
+					FBMesh::Vec3{v.normal.x, v.normal.y, v.normal.z},
+					FBMesh::Vec3{v.color.x, v.color.y, v.color.z},
+					FBMesh::Vec2{v.texUV.x, v.texUV.y}
+				});
     		}
-    		meshFile << meshOut.c_str();
-    		meshFile.close();
+
+    		auto vertexVector = builder.CreateVectorOfStructs(flatbufferVerts);
+    		auto indexVector = builder.CreateVector(mesh.indices);
+    		auto nameString = builder.CreateString(mesh.name);
+    		auto materialString = builder.CreateString(mesh.material->GetName());
+
+    		auto fbmesh = FBMesh::CreateMesh(builder, nameString, vertexVector, indexVector, materialString);
+
+    		builder.Finish(fbmesh, "ATMS");
+
+    		std::ofstream ofs(workingDir + "/" + meshFilename, std::ios::binary);
+    		ofs.write(reinterpret_cast<const char*>(builder.GetBufferPointer()), builder.GetSize());
+    		ofs.close();
     	}
 
     	out << YAML::EndSeq;
@@ -197,7 +202,7 @@ namespace Engine
     	LOG_DEBUG("Finished exporting the Model");
     }
 
-    void ModelImporter::ProcessNode(int nodeIndex, const glm::mat4& parentTransform)
+    void ModelImporter::ProcessNode(int nodeIndex, const glm::mat4& parentTransform, uint32_t& index)
     {
     	const tinygltf::Node& node = m_Model->nodes[nodeIndex];
 
@@ -221,8 +226,7 @@ namespace Engine
     	glm::mat4 globalTransform = parentTransform * localTransform;
 
     	// LOG_DEBUG((char*)m_Model->meshes.size());
-
-    	uint32_t index = 0;
+    	
     	if (node.mesh >= 0) {
     		const tinygltf::Mesh& mesh = m_Model->meshes[node.mesh];
     		for (const auto& primitive : mesh.primitives) {
@@ -234,13 +238,15 @@ namespace Engine
     	}
 
     	for (int childIndex : node.children) {
-    		ProcessNode(childIndex, globalTransform);
+    		ProcessNode(childIndex, globalTransform, index);
     	}
     }
 
     void ModelImporter::ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform,
 	    int materialIndex, uint32_t index)
     {
+		LOG_DEBUG("Index: %i", index);
+    	
     	LOG_DEBUG("Process Primitive")
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;

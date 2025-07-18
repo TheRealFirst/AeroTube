@@ -26,7 +26,7 @@ namespace Engine
         void SaveModel(const std::string& filepath, const std::optional<std::string>& name = std::nullopt);
 
     private:
-        void ProcessNode(int nodeIndex, const glm::mat4& parentTransform);
+        void ProcessNode(int nodeIndex, const glm::mat4& parentTransform, uint32_t& index);
         void ProcessPrimitive(const tinygltf::Primitive& primitive, const glm::mat4& transform, int materialIndex, uint32_t index);
 
         static glm::vec3 ReadVec3(const float* data);
